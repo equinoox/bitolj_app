@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "bitolj_app",
-    "slug": "bitolj_app",
+    "name": "Bitolj Popis",
+    "slug": "bitolj_popis",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
+    "scheme": "bitoljapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
