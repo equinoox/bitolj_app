@@ -3,10 +3,15 @@ import { StatusBar } from 'expo-status-bar'
 import { Link, Redirect, Router, router } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import React, { useEffect, useRef } from 'react';
+// import * as DB from '../scripts/bitoljdb';
+// import { useDrizzleStudio } from 'expo-drizzle-studio-plugin';
 
 
 const App = () => {
   
+    // DB.createTabels();
+
+    // useDrizzleStudio(DB.db);
     // Animated values for opacity
     const imageOpacity = useRef(new Animated.Value(0)).current;
     const textOpacity = useRef(new Animated.Value(0)).current;
