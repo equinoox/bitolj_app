@@ -1,17 +1,12 @@
 import { Text, View, ImageBackground, ScrollView, Image, TouchableOpacity, Animated } from 'react-native'
 import { StatusBar } from 'expo-status-bar'
-import { Link, Redirect, Router, router } from 'expo-router'
+import { router } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import React, { useEffect, useRef } from 'react';
-// import * as DB from '../scripts/bitoljdb';
-// import { useDrizzleStudio } from 'expo-drizzle-studio-plugin';
 
 
 const App = () => {
-  
-    // DB.createTabels();
 
-    // useDrizzleStudio(DB.db);
     // Animated values for opacity
     const imageOpacity = useRef(new Animated.Value(0)).current;
     const textOpacity = useRef(new Animated.Value(0)).current;
@@ -42,7 +37,7 @@ const App = () => {
 
   return (
     <ImageBackground
-    source={require('../assets/images/welcome_bg_image.webp')} // Replace with your image path
+    source={require('../assets/images/welcome_bg_image.webp')} 
     className="flex-1"
     resizeMode="cover"
     >
@@ -50,7 +45,7 @@ const App = () => {
       <View className="absolute top-0 left-0 w-full h-full bg-black opacity-50" />
       <SafeAreaView className=" h-full flex">
         <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-          <View className="w-full items-center px-4 py-8 flex-1 mt-24">
+          <View className="w-full items-center px-4 py-8 flex-1 mt-56">
             {/* Header Image */}
             <Animated.Image
               source={require('../assets/images/headerIcon.webp')}

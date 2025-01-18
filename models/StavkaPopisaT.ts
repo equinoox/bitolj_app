@@ -1,5 +1,4 @@
 export class StavkaPopisa{
-    id_stavka_popisa: number;
     id_popis: number;
     pocetno_stanje: number;
     uneto: number;
@@ -14,9 +13,7 @@ export class StavkaPopisa{
         krajnje_stanje: number,
         ukupno: number,
         id_pice: number,
-        id_stavka_popisa: number
       ) {
-        this.id_stavka_popisa = id_stavka_popisa;
         this.id_popis = id_popis;
         this.pocetno_stanje = pocetno_stanje;
         this.uneto = uneto;
@@ -94,7 +91,6 @@ export class StavkaPopisa{
     // toString Method
     toString(): string {
         return `Stavka_Popisa {
-        ID Stavka Popisa: ${this.id_stavka_popisa ?? 'N/A'},
         ID Popis: ${this.id_popis},
         Početno Stanje: ${this.pocetno_stanje.toFixed(2)},
         Uneto: ${this.uneto.toFixed(2)},

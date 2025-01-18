@@ -1,53 +1,42 @@
 export class Popis {
-    id_popis?: number;
-    datum: Date;
-    kuhinja: number;
-    kuhinjaSt: number;
-    ostalop: number;
-    ostalopOpis: string;
-    wolt: number;
-    glovo: number;
-    kartice: number;
-    sale: number;
-    ostalot: number;
-    ostalotOpis: string;
-    virman: number;
-    virmanOpis: string;
-    ukupno: number;
-    smena: string;
-    id_korisnik: number;
+     datum: Date;
+     kuhinja: number;
+     kuhinjaSt: number;
+     wolt: number;
+     glovo: number;
+     sale: number;
+     ostalo: number;
+     ostaloOpis: string;
+     virman: number;
+     virmanOpis: string;
+     ukupno: number;
+     smena: string;
+     id_korisnik: number;
   
     constructor(
       datum: Date,
       kuhinja: number,
       kuhinjaSt: number,
-      ostalop: number,
-      ostalopOpis: string,
       wolt: number,
       glovo: number,
-      kartice: number,
       sale: number,
-      ostalot: number,
-      ostalotOpis: string,
+      ostalo: number,
+      ostaloOpis: string,
       virman: number,
       virmanOpis: string,
       ukupno: number,
       smena: string,
       id_korisnik: number,
-      id_popis?: number
+      id_popis: number
     ) {
-      this.id_popis = id_popis;
       this.datum = datum;
       this.kuhinja = kuhinja;
       this.kuhinjaSt = kuhinjaSt;
-      this.ostalop = ostalop;
-      this.ostalopOpis = ostalopOpis;
       this.wolt = wolt;
       this.glovo = glovo;
-      this.kartice = kartice;
       this.sale = sale;
-      this.ostalot = ostalot;
-      this.ostalotOpis = ostalotOpis;
+      this.ostalo = ostalo;
+      this.ostaloOpis = ostaloOpis;
       this.virman = virman;
       this.virmanOpis = virmanOpis;
       this.ukupno = ukupno;
@@ -55,13 +44,6 @@ export class Popis {
       this.id_korisnik = id_korisnik;
     }
   
-    // Getter and Setter for id_popis
-    get idPopis(): number | undefined {
-      return this.id_popis;
-    }
-    set idPopis(value: number | undefined) {
-      this.id_popis = value;
-    }
   
     // Getter and Setter for datum
     get datumPopisa(): Date {
@@ -128,21 +110,21 @@ export class Popis {
   
     // Getter and Setter for ostalo
     get ostaloStavka(): number {
-      return this.ostalot;
+      return this.ostalo;
     }
     set ostaloStavka(value: number) {
       if (value < 0) {
         throw new Error('Ostalo ne može imati negativnu vrednost.');
       }
-      this.ostalot = value;
+      this.ostalo = value;
     }
   
     // Getter and Setter for ostaloOpis
     get ostaloOpisStavka(): string {
-      return this.ostalotOpis;
+      return this.ostaloOpis;
     }
     set ostaloOpisStavka(value: string) {
-      this.ostalotOpis = value;
+      this.ostaloOpis = value;
     }
   
     // Getter and Setter for virman
@@ -189,15 +171,14 @@ export class Popis {
     // toString Method
     toString(): string {
       return `Popis {
-        ID Popis: ${this.id_popis ?? 'N/A'},
         Datum: ${this.datum.toISOString().split('T')[0]},
         Kuhinja: ${this.kuhinja.toFixed(2)},
         KuhinjaSt: ${this.kuhinjaSt.toFixed(2)},
         Wolt: ${this.wolt.toFixed(2)},
         Glovo: ${this.glovo.toFixed(2)},
         Sale: ${this.sale.toFixed(2)},
-        Ostalo: ${this.ostalot.toFixed(2)},
-        Ostalo Opis: ${this.ostalotOpis},
+        Ostalo: ${this.ostalo.toFixed(2)},
+        Ostalo Opis: ${this.ostaloOpis},
         Virman: ${this.virman.toFixed(2)},
         Virman Opis: ${this.virmanOpis},
         Ukupno: ${this.ukupno.toFixed(2)},
@@ -205,4 +186,3 @@ export class Popis {
       }`;
     }
   }
-  

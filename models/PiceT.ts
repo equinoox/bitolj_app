@@ -1,11 +1,9 @@
-export class Pice{
-    id_pice: number;
+export class PiceT{
     naziv: string;
     cena: number;
     deleted: string;
 
-    constructor(naziv: string, cena: number, id_pice: number, deleted: string) {
-        this.id_pice = id_pice;
+    constructor(naziv: string, cena: number, deleted: string) {
         this.naziv = naziv;
         this.cena = cena;
         this.deleted = deleted;
@@ -37,7 +35,6 @@ export class Pice{
       // toString Method
       toString(): string {
         return `Pice {
-          ID: ${this.id_pice ?? 'N/A'},
           Naziv: ${this.naziv},
           Cena: ${this.cena.toFixed(2)} RSD
         }`;

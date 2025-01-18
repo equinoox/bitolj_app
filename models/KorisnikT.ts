@@ -1,13 +1,11 @@
-export class Korisnik{
-    id_korisnik: number;
+export class KorisnikT{
     ime: string;
     prezime: string;
     sifra: string;
     role: string;
     deleted: string;
 
-    constructor(ime: string, prezime: string, sifra: string, role:string, id_korisnik: number, deleted: string){
-        this.id_korisnik = id_korisnik;
+    constructor(ime: string, prezime: string, sifra: string, role:string, deleted: string){
         this.ime = ime;
         this.prezime = prezime;
         this.sifra = sifra;
@@ -50,7 +48,6 @@ export class Korisnik{
 
     toString(): string {
         return `Korisnik {
-          ID: ${this.id_korisnik ?? 'N/A'},
           Ime: ${this.ime},
           Prezime: ${this.prezime},
           Šifra: ${'*'.repeat(this.sifra.length)}
