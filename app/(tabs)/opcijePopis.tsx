@@ -151,9 +151,9 @@ const opcijePopis = () => {
         const datum = selectedPopisData.datum;
         const smena = selectedPopisData.smena;
     
-        console.log('Selected Popis Data: ', selectedPopisData);
-        console.log('Datum: ', datum);
-        console.log('Smena: ', smena);
+        // console.log('Selected Popis Data: ', selectedPopisData);
+        // console.log('Datum: ', datum);
+        // console.log('Smena: ', smena);
     
         if (datum && smena) {
             let formattedDatum: string;
@@ -164,8 +164,8 @@ const opcijePopis = () => {
             return;
             }
     
-            console.log('Formatted Datum:', formattedDatum);
-            console.log('Popis ID:', popisId);
+            // console.log('Formatted Datum:', formattedDatum);
+            // console.log('Popis ID:', popisId);
     
             const stavkaResult = await database.getAllAsync<Stavka_Popisa>(
             `SELECT sp.* 
@@ -365,12 +365,12 @@ const opcijePopis = () => {
           try {
             await Promise.all(
                 updates.map(update => {
-                  console.log("Menja se stavka ID: " + update.id_stavka_popisa)
-                  console.log("Pocetno stanje: " +  update.pocetno_stanje)
-                  console.log("Uneto: " +  update.uneto)
-                  console.log("Krajnje stanje: " +  update.krajnje_stanje_string)
-                  console.log("Prodato: " +  update.prodato)
-                  console.log("Ukupno: " +  update.ukupno)
+                  // console.log("Menja se stavka ID: " + update.id_stavka_popisa)
+                  // console.log("Pocetno stanje: " +  update.pocetno_stanje)
+                  // console.log("Uneto: " +  update.uneto)
+                  // console.log("Krajnje stanje: " +  update.krajnje_stanje_string)
+                  // console.log("Prodato: " +  update.prodato)
+                  // console.log("Ukupno: " +  update.ukupno)
                   database.runAsync(
                     "UPDATE stavka_popisa SET pocetno_stanje = ?, uneto = ?, krajnje_stanje = ?, prodato = ?, ukupno = ? WHERE id_stavka_popisa = ?",
                     [
@@ -435,9 +435,12 @@ const opcijePopis = () => {
                 );
                 setSelectedPopis(null)
                 Alert.alert(
-                  "Success",
-                  "Popis je uspešno promenjen! Aplikacija će se resetovati kako bi se sačuvale promene.",
-                  [{ text: "Da", onPress: () => {BackHandler.exitApp()}}]
+                  'Adding Success',
+                  'Popis je uspešno promenjen! Aplikacija će se resetovati kako bi se sačuvale promene.',
+                  [{ text: "OK", onPress: async () => {
+                    await setUserData(null);
+                    router.replace('/');
+                  }}]
                 );
             }
             // Update the database
@@ -486,7 +489,7 @@ const opcijePopis = () => {
 
       
     useEffect(() => {
-    console.log("selectedPopis:", selectedPopis);
+    // console.log("selectedPopis:", selectedPopis);
     if (selectedPopis) {
         setPrihodiValues({
         kuhinja: selectedPopis.kuhinja || '',

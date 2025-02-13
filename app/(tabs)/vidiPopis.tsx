@@ -84,9 +84,9 @@ const VidiPopis = () => {
         const datum = selectedPopisData.datum;
         const smena = selectedPopisData.smena;
   
-        console.log('Selected Popis Data: ', selectedPopisData);
-        console.log('Datum: ', datum);
-        console.log('Smena: ', smena);
+        // console.log('Selected Popis Data: ', selectedPopisData);
+        // console.log('Datum: ', datum);
+        // console.log('Smena: ', smena);
   
         if (datum && smena) {
           let formattedDatum: string;
@@ -97,8 +97,8 @@ const VidiPopis = () => {
             return;
           }
   
-          console.log('Formatted Datum:', formattedDatum);
-          console.log('Popis ID:', popisId);
+          // console.log('Formatted Datum:', formattedDatum);
+          // console.log('Popis ID:', popisId);
   
           const stavkaResult = await database.getAllAsync<Stavka_Popisa>(
             `SELECT sp.* 
@@ -110,7 +110,7 @@ const VidiPopis = () => {
             [popisId, formattedDatum, smena]
           );
   
-          console.log('Stavka Result:', stavkaResult);
+          // console.log('Stavka Result:', stavkaResult);
           setDataStavka(stavkaResult);
         } else {
           console.warn("Missing datum or smena in selectedPopisData");

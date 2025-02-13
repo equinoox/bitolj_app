@@ -402,17 +402,17 @@ const Popis = () => {
   
 
   const handleChangePrihodi = (value: string) => {
-    console.log('Saving Prihodi value to PTInptus:', value); // This should show "5+5"
+    // console.log('Saving Prihodi value to PTInptus:', value);
     setPTInptus((prev) => ({ ...prev, ostalop: value }));
   };
   
   const handleChangeTroskovi = (value: string) => {
-    console.log('Saving Troskovi value to PTInptus:', value); // This should show "5+5"
+    // console.log('Saving Troskovi value to PTInptus:', value);
     setPTInptus((prev) => ({ ...prev, ostalot: value }));
   };
 
   const handleChangeVirman = (value: string) => {
-    console.log('Saving Virman value to PTInptus:', value); // This should show "5+5"
+    // console.log('Saving Virman value to PTInptus:', value);
     setPTInptus((prev) => ({ ...prev, virman: value }));
   };
 
@@ -549,16 +549,16 @@ const Popis = () => {
     const isValid = await validateInputs();
     if(isValid){
       // DEBUG
-      console.log("Popis Confirmed! Here are the input values:");
-      console.log(JSON.stringify(inputValues, null, 2));
-      console.log("Prihodi & Troskovi Inputs:");
-      console.log(JSON.stringify(PTInptus, null, 2));
-      console.log("Other Inputs:");
-      console.log(JSON.stringify(otherInputs, null, 2));
-      const test1 = new Date().toISOString().split('T')[0]
-      const test = new Date().toLocaleString("en-GB", { timeZone: "Europe/Belgrade" }).split('T')[0];
-      console.log("Datum new Date: " + test )
-      console.log("Datum new Date no Belgrade: " + test1)
+      // console.log("Popis Confirmed! Here are the input values:");
+      // console.log(JSON.stringify(inputValues, null, 2));
+      // console.log("Prihodi & Troskovi Inputs:");
+      // console.log(JSON.stringify(PTInptus, null, 2));
+      // console.log("Other Inputs:");
+      // console.log(JSON.stringify(otherInputs, null, 2));
+      // const test1 = new Date().toISOString().split('T')[0]
+      // const test = new Date().toLocaleString("en-GB", { timeZone: "Europe/Belgrade" }).split('T')[0];
+      // console.log("Datum new Date: " + test )
+      // console.log("Datum new Date no Belgrade: " + test1)
       try {
         const result = await database.runAsync(`
           INSERT INTO popis (
@@ -601,14 +601,14 @@ const Popis = () => {
             ukupno = prodato * parseFloat(item.cena);
           }
   
-          console.log("Ubacuje se Stavka... " + item.naziv)
-          console.log("ID Popis: " + insertId)
-          console.log("Pocetak: " + pocetak)
-          console.log("Uneto: " + uneto)
-          console.log("Kraj: " + kraj)
-          console.log("Kraj Stirng: " + kraj_string)
-          console.log("prodato: " + prodato)
-          console.log("ukupno: " + ukupno)
+          // console.log("Ubacuje se Stavka... " + item.naziv)
+          // console.log("ID Popis: " + insertId)
+          // console.log("Pocetak: " + pocetak)
+          // console.log("Uneto: " + uneto)
+          // console.log("Kraj: " + kraj)
+          // console.log("Kraj Stirng: " + kraj_string)
+          // console.log("prodato: " + prodato)
+          // console.log("ukupno: " + ukupno)
   
           await database.runAsync(
             `INSERT INTO stavka_popisa (
@@ -625,11 +625,14 @@ const Popis = () => {
             ]
           );
         }
+
         Alert.alert(
           'Adding Success',
           'Popis je uspešno sačuvan! Aplikacija će se resetovati kako bi se sačuvale promene.',
-          [{ text: "OK", onPress: () => {BackHandler.exitApp()}}]
-          
+          [{ text: "OK", onPress: async () => {
+            await setUserData(null);
+            router.replace('/');
+          }}]
         );
 
         // RESET INPUT VALUES 
