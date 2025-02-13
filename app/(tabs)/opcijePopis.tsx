@@ -307,9 +307,12 @@ const opcijePopis = () => {
           await database.runAsync("DELETE from popis WHERE id_popis = ?", [id_popis])
           setSelectedPopis(null);
           Alert.alert(
-            "Success",
-            "Popis je uspešno izbrisan! Aplikacija će se resetovati kako bi se sačuvale promene.",
-            [{ text: "Da", onPress: () => {BackHandler.exitApp()}}]
+            'Adding Success',
+            'Popis je uspešno promenjen! Aplikacija će se resetovati kako bi se sačuvale promene.',
+            [{ text: "OK", onPress: async () => {
+              await setUserData(null);
+              router.replace('/');
+            }}]
           );
         } catch (error) {
             console.log(error)
