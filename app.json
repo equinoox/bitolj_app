@@ -13,7 +13,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/android_icon.png",
         "backgroundColor": "#ffffff"
       },
       "package": "com.lazarpav.bitolj_popis"
