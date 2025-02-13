@@ -85,8 +85,8 @@ export const rollbackTables = async (db: SQLiteDatabase) => {
     `);
   };
 export const addAdmin = async (db: SQLiteDatabase) => {  
-  console.log("Adding Admin...")
   try{
+    console.log("Adding Admin...")
     await db.execAsync("INSERT INTO korisnik (id_korisnik, ime, prezime, sifra, role, deleted) VALUES (1, 'Aleksandar', 'Milenković', '2468', 'admin', 'false');")
   } catch (error) {
     console.log("Admin already added.")
