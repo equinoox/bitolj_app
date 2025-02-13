@@ -628,8 +628,8 @@ const Popis = () => {
         Alert.alert(
           'Adding Success',
           'Popis je uspešno sačuvan! Aplikacija će se resetovati kako bi se sačuvale promene.',
-          [{ text: "OK", onPress: () => {}}]
-          // BackHandler.exitApp()
+          [{ text: "OK", onPress: () => {BackHandler.exitApp()}}]
+          
         );
 
         // RESET INPUT VALUES 
@@ -1023,8 +1023,8 @@ const Popis = () => {
             >
               <Picker.Item label= "[Smena]" value=""/>
               {/* enabled={isBefore16h} enabled={isAfter16h} */}
-              <Picker.Item label="Prva smena" value="prva"  style={{ color: isBefore16h ? 'black' : 'gray' }}/> 
-              <Picker.Item label="Druga smena" value="druga"  style={{ color: isAfter16h ? 'black' : 'gray' }} />
+              <Picker.Item label="Prva smena" value="prva" enabled={isBefore16h}  style={{ color: isBefore16h ? 'black' : 'gray' }}/> 
+              <Picker.Item label="Druga smena" value="druga" enabled={isAfter16h}  style={{ color: isAfter16h ? 'black' : 'gray' }} />
             </Picker>
           </View>
       </View>
