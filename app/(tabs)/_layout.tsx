@@ -1,7 +1,5 @@
-import { View, Text } from 'react-native'
 import { Tabs, Redirect } from 'expo-router'
-// Imports for icons
-import Entypo from '@expo/vector-icons/Entypo';
+import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import AntDesign from '@expo/vector-icons/AntDesign';
@@ -36,6 +34,13 @@ const TabsLayout = () => {
           headerShown: false,
           tabBarIcon: ({color}) => (
             <Ionicons name="newspaper" size={24} color={color} />
+          )
+        }}/>
+        <Tabs.Screen name='opcijePopis' options={{
+          title: "Promeni Popis",
+          headerShown: false,
+          tabBarIcon: ({color}) => (
+            <FontAwesome5 name="edit" size={24} color={color} />
           )
         }}/>
         <Tabs.Screen name='radnici' options={{

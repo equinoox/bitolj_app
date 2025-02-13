@@ -42,7 +42,7 @@ const Proizvodi = () => {
             className="absolute top-4 right-4 bg-secondary rounded-md items-center"
             onPress={logoutConfirm}
           >
-            <AntDesign name="logout" size={36} color="#AA0000" />
+            <AntDesign name="logout" size={42} color="#AA0000" />
           </TouchableOpacity>
 
           {/* Icon and Info Row */}
@@ -89,14 +89,29 @@ const Proizvodi = () => {
                 <Text>Dodaj Piće</Text>
               </TouchableOpacity>
             </>
+          ) : userData?.role === 'manager' ? (
+            <>
+              <TouchableOpacity 
+                className='mt-4 bg-orange items-center w-2/4 rounded-md py-4 px-4'
+                onPress={() => router.push("/pice/listPice")}
+              >
+                <Text>Lista Pića</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                className='mt-4 bg-orange items-center w-2/4 rounded-md py-4 px-4'
+                onPress={() => router.push("/pice/addPice")}
+              >
+                <Text>Dodaj Piće</Text>
+              </TouchableOpacity>
+            </>
           ) : (
             // Non-admin content
-            <View className="mt-8 p-4 bg-red-100 rounded-lg justify-center items-center">
-              <MaterialIcons name="cancel" size={74} color="#393B44" />
-              <Text className="text-red-600 text-center text-lg">
-                Ne možete pristupiti jer nemate administratorske privilegije.
-              </Text>
-            </View>
+            <TouchableOpacity 
+            className='mt-4 bg-orange items-center w-2/4 rounded-md py-4 px-4'
+            onPress={() => router.push("/pice/listPice")}
+            >
+              <Text>Lista Pića</Text>
+            </TouchableOpacity>
           )}
         </View>
       </ScrollView>

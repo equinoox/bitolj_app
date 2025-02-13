@@ -25,6 +25,7 @@ const FormField: React.FC<InputProps> = ({ title, value, handleChangeText, other
             placeholder=""
             placeholderTextColor="#7b7b8b"
             onChangeText={handleChangeText}
+            keyboardType="number-pad"
             secureTextEntry={title === "Šifra" && !showPassword}
         />
         {title === "Šifra" && (

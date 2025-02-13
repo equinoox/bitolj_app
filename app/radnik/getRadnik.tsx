@@ -42,6 +42,10 @@ const getRadnik = () => {
     return /^[a-zA-ZćčžšđĆČŽŠĐ!@#$%^&*(),.?":{}|<>_\-+=~`[\]\\]*$/.test(value);
   }; 
   const handleTypes = async () => {
+    if(selectedRow?.ime === "Aleksandar" && selectedRow?.prezime === "Milenković"){
+      Alert.alert("Delete Error", "Ne možete promeniti ovog admina.")
+      return
+    }
     if(ime == null || typeof ime !== "string" || ime == '' || prezime == null || typeof prezime !== "string" || prezime == '' || !isLettersAndSymbols(ime) || !isLettersAndSymbols(prezime)){
       Alert.alert(
         "Error",
@@ -85,8 +89,12 @@ const getRadnik = () => {
 
   // DELETE
   const handleDelete = async () => {
-    if (!selectedRow || !selectedRow.ime || !selectedRow.prezime || selectedRow.prezime === "admin") {
-        Alert.alert("Delete Error", "Ne možete izbrisati Admina.")
+    if(selectedRow?.ime === "Aleksandar" && selectedRow?.prezime === "Milenković"){
+      Alert.alert("Delete Error", "Ne možete izbrisati ovog admina.")
+      return
+    }
+    if (!selectedRow || !selectedRow.ime || !selectedRow.prezime) {
+        Alert.alert("Delete Error", "Niste izabrali polje.")
         return
     } else {
         Alert.alert(
@@ -115,68 +123,82 @@ const getRadnik = () => {
   return (
     <SafeAreaView className='h-full flex bg-primary'>
         <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-            <View className="mt-4 px-4">
-                <View className="flex-row justify-between border-b-2 border-black pb-2 mb-2">
-                  <View className="flex-row flex-[2]">
-                    <Text className="text-lg font-bold mr-4">Ime - Prezime</Text>
-                  </View>
-                  <Text className="text-lg font-bold flex-1 text-right">Pozicija</Text>
+            <View className="mt-4 px-6 mx-auto w-full max-w-2xl">
+                {/* Table Header */}
+                <View className="flex-row justify-between items-center border-b-2 border-black pb-3 mb-4">
+                    <View className="flex-row flex-[2]">
+                        <Text className="text-lg font-bold">Ime - Prezime</Text>
+                    </View>
+                    <View className="flex-1">
+                        <Text className="text-lg font-bold text-center">Pozicija</Text>
+                    </View>
                 </View>
+
+                {/* Table Data */}
                 {data.map((item) => (
                     <TouchableOpacity
                         key={item.id_korisnik}
-                        className={`flex-row justify-between border-b border-gray-300 py-2 ${
-                        selectedRow?.id_korisnik === item.id_korisnik ? "bg-orange" : ""
+                        className={`flex-row justify-between items-center border-b border-gray-300 py-3 ${
+                            selectedRow?.id_korisnik === item.id_korisnik ? "bg-orange" : ""
                         }`}
                         onPress={() => setSelectedRow(item)}
                     >
-                      <View className="flex-row flex-[2]">
-                        <Text className="mr-4">{item.ime}</Text>
-                        <Text>{item.prezime}</Text>
-                      </View>
-                      <Text className="flex-1 text-right">
-                      {item.role === "admin" ? "Admin" : item.role === "user" ? "Radnik" : item.role}
-                      </Text>
+                        <View className="flex-row flex-[2]">
+                            <Text className="text-base">{item.ime}</Text>
+                            <Text className="text-base ml-2">{item.prezime}</Text>
+                        </View>
+                        <View className="flex-1">
+                            <Text className="text-base text-center">
+                                {item.role === "admin" ? "Admin" : 
+                                item.role === "user" ? "Radnik" : 
+                                item.role === "manager" ? "Menadžer" : 
+                                item.role}
+                            </Text>
+                        </View>
                     </TouchableOpacity>
-                   ))}
-                  {selectedRow && (
-                    <View className="mt-4">
-                        <Text className="text-lg font-semibold">
-                            Izabrani Radnik: {selectedRow.ime} - {selectedRow.prezime} - {selectedRow.role === "admin" ? "Admin" : selectedRow.role === "user" ? "Radnik" : selectedRow.role}
+                ))}
+
+                {/* Selected Row Information */}
+                {selectedRow && (
+                    <View className="mt-6 w-full">
+                        <Text className="text-lg font-semibold text-center">
+                            Izabrani Radnik: {selectedRow.ime} {selectedRow.prezime}
                         </Text>
-                        <View className='w-full flex-row justify-center mt-3'>
+                        
+                        {/* Action Buttons */}
+                        <View className='w-full flex-row justify-center mt-4'>
                             <TouchableOpacity 
-                            className='mt-4 bg-orange mx-2 items-center w-1/3 rounded-md py-4 px-4'
-                            onPress={async () => handleTypes()}
+                                className='bg-orange mx-2 items-center w-1/3 rounded-md py-4'
+                                onPress={handleTypes}
                             >
-                                <Text>Promeni Radnika</Text>
+                                <Text>Izmeni</Text>
                             </TouchableOpacity>
                             <TouchableOpacity 
-                            className='mt-4 bg-red-500 mx-2 items-center w-1/3 rounded-md py-4 px-4'
-                            onPress={async () => handleDelete()}
+                                className='bg-red-500 mx-2 items-center w-1/3 rounded-md py-4'
+                                onPress={handleDelete}
                             >
-                                <Text>Izbriši Radnika</Text>
+                                <Text>Izbriši</Text>
                             </TouchableOpacity>
                         </View>
-                        <View className="mt-4 px-4 justify-center items-center">
-                          <Text className='text-center'>Ime</Text>
-                          <TextInput
-                            placeholder='Ime'
-                            value={ime}
-                            onChangeText={(text) => setIme(text)}
-                            className='w-3/4 mt-2 border border-gray-300 bg-white rounded-md p-3 text-gray-700'
-                          />
-                          <Text className='text-center mt-2'>Prezime</Text>
-                          <TextInput
-                            placeholder='Prezime'
-                            value={prezime}
-                            onChangeText={(text) => setPrezime(text)}
-                            className='w-3/4 mt-2 border border-gray-300 bg-white rounded-md p-3 text-gray-700'
-                          />
+                        <View className='mt-4 justify-center items-center'>
+                        <Text className='text-center'>Ime</Text>
+                        <TextInput
+                          placeholder='Ime'
+                          value={ime}
+                          onChangeText={(text) => setIme(text)}
+                          className='w-3/4 mt-2 border border-gray-300 bg-white rounded-md p-3 text-gray-700'
+                        />
+                        <Text className='text-center mt-2'>Prezime</Text>
+                        <TextInput
+                          placeholder='Prezime'
+                          value={prezime}
+                          onChangeText={(text) => setPrezime(text)}
+                          className='w-3/4 mt-2 border border-gray-300 bg-white rounded-md p-3 text-gray-700'
+                        />
                         </View>
                     </View>
-                  )}
-                </View>
+                )}
+            </View>
         </ScrollView>
     </SafeAreaView>
   )

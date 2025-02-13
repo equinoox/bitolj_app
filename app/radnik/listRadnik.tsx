@@ -22,33 +22,46 @@ const listRadnik = () => {
   );
 
   return (
-      <SafeAreaView className='h-full flex bg-primary'>
+    <SafeAreaView className='h-full flex bg-primary'>
         <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-            <View className="mt-4 px-4">
-                <View className="flex-row justify-between border-b-2 border-black pb-2 mb-2">
-                  <View className="flex-row flex-[2]">
-                    <Text className="text-lg font-bold mr-4">Ime - Prezime</Text>
-                  </View>
-                  <Text className="text-lg font-bold flex-1 text-right">Pozicija</Text>
+            <View className="mt-4 px-6 mx-auto w-full max-w-2xl">
+                {/* Table Header */}
+                <View className="flex-row justify-between items-center border-b-2 border-black pb-3 mb-4">
+                    <View className="flex-row flex-[2]">
+                        <Text className="text-lg font-bold">Ime - Prezime</Text>
+                    </View>
+                    <View className="flex-1">
+                        <Text className="text-lg font-bold text-center">Pozicija</Text>
+                    </View>
                 </View>
+
+                {/* Table Data */}
                 {data.map((item) => (
                     <TouchableOpacity
                         key={item.id_korisnik}
-                        className={`flex-row justify-between border-b border-gray-300 py-2 ${
-                        selectedRow?.id_korisnik === item.id_korisnik ? "bg-orange" : ""
+                        className={`flex-row justify-between items-center border-b border-gray-300 py-3 ${
+                            selectedRow?.id_korisnik === item.id_korisnik ? "bg-orange" : ""
                         }`}
                         onPress={() => setSelectedRow(item)}
                     >
-                      <View className="flex-row flex-[2]">
-                        <Text className="mr-4">{item.ime}</Text>
-                        <Text>{item.prezime}</Text>
-                      </View>
-                      <Text className="flex-1 text-right">{item.role === "admin" ? "Admin" : item.role === "user" ? "Radnik" : item.role}</Text>
+                        <View className="flex-row flex-[2]">
+                            <Text className="text-base">{item.ime}</Text>
+                            <Text className="text-base ml-2">{item.prezime}</Text>
+                        </View>
+                        <View className="flex-1">
+                            <Text className="text-base text-center">
+                                {item.role === "admin" ? "Admin" : 
+                                 item.role === "user" ? "Radnik" : 
+                                 item.role === "manager" ? "Menadžer" : 
+                                 item.role}
+                            </Text>
+                        </View>
                     </TouchableOpacity>
-                   ))}
-                </View>
+                ))}
+            </View>
         </ScrollView>
-      </SafeAreaView> 
+    </SafeAreaView>
+
   )
 }
 

@@ -43,7 +43,7 @@ const Radnici = () => {
             className="absolute top-4 right-4 bg-secondary rounded-md items-center"
             onPress={logoutConfirm}
           >
-            <AntDesign name="logout" size={36} color="#AA0000" />
+            <AntDesign name="logout" size={42} color="#AA0000" />
           </TouchableOpacity>
 
           {/* Icon and Info Row */}
@@ -71,43 +71,52 @@ const Radnici = () => {
           <View className="mt-4 w-full border-t-2 border-black"/>
           {userData?.role === 'admin' ? (
             <>
-            <TouchableOpacity 
-            className='mt-4 bg-orange items-center w-2/4 rounded-md py-4 px-4'
-            onPress={() => router.push("/radnik/listRadnik")}
-            >
-              <Text>Lista Radnika</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-            className='mt-4 bg-orange items-center w-2/4 rounded-md py-4 px-4'
-            onPress={() => router.push("/radnik/getRadnik")}
-            >
-              <Text>Promeni/Obriši Radnika</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-            className='mt-4 bg-orange items-center w-2/4 rounded-md py-4 px-4'
-            onPress={() => router.push("/radnik/roleRadnik")}
-            >
-              <Text>Promeni poziciju Radnika</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-            className='mt-4 bg-orange items-center w-2/4 rounded-md py-4 px-4'
-            onPress={() => router.push("/radnik/passRadnik")}
-            >
-              <Text>Promeni šifru Radnika</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-            className='mt-4 bg-orange items-center w-2/4 rounded-md py-4 px-4'
-            onPress={() => router.push("/radnik/addRadnik")}
-            >
-              <Text>Dodaj Radnika</Text>
-            </TouchableOpacity>
+              <TouchableOpacity 
+                className='mt-4 bg-orange items-center w-2/4 rounded-md py-4 px-4'
+                onPress={() => router.push("/radnik/listRadnik")}
+              >
+                <Text>Lista Radnika</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                className='mt-4 bg-orange items-center w-2/4 rounded-md py-4 px-4'
+                onPress={() => router.push("/radnik/getRadnik")}
+              >
+                <Text>Promeni/Obriši Radnika</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                className='mt-4 bg-orange items-center w-2/4 rounded-md py-4 px-4'
+                onPress={() => router.push("/radnik/roleRadnik")}
+              >
+                <Text>Promeni poziciju Radnika</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                className='mt-4 bg-orange items-center w-2/4 rounded-md py-4 px-4'
+                onPress={() => router.push("/radnik/passRadnik")}
+              >
+                <Text>Promeni šifru Radnika</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                className='mt-4 bg-orange items-center w-2/4 rounded-md py-4 px-4'
+                onPress={() => router.push("/radnik/addRadnik")}
+              >
+                <Text>Dodaj Radnika</Text>
+              </TouchableOpacity>
+            </>
+          ) : userData?.role === 'manager' ? (
+            <>
+              <TouchableOpacity 
+                className='mt-4 bg-orange items-center w-2/4 rounded-md py-4 px-4'
+                onPress={() => router.push("/radnik/listRadnik")}
+              >
+                <Text>Lista Radnika</Text>
+              </TouchableOpacity>
             </>
           ) : (
-            // Non-admin content
+            // Non-admin, Non-manager content
             <View className="mt-8 p-4 bg-red-100 rounded-lg justify-center items-center">
               <MaterialIcons name="cancel" size={74} color="#393B44" />
               <Text className="text-red-600 text-center text-lg">
-                Ne možete pristupiti jer nemate administratorske privilegije.
+                Ne možete pristupiti jer nemate odgovarajuće privilegije.
               </Text>
             </View>
           )}

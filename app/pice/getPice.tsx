@@ -1,5 +1,6 @@
 import { Text, View, SafeAreaView, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native'
 import { useState, useCallback, useEffect } from 'react'
+import { Picker } from '@react-native-picker/picker';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useFocusEffect } from 'expo-router';
 import { Pice } from '@/models/Pice';
@@ -14,6 +15,13 @@ const getPice = () => {
     const [selectedRow, setSelectedRow] = useState<Pice | null>(null);
     const [naziv, setNaziv] = useState('');
     const [cena, setCena] = useState('');
+    const [type, setType] = useState('');
+
+    const handleAddDot = () => {
+        if (!cena.includes(".")) {
+          setCena(cena + ".");
+        }
+      };
 
 
     // READ
@@ -32,18 +40,16 @@ const getPice = () => {
     useEffect(() => {
         if (selectedRow) {
             setNaziv(selectedRow.naziv);
-            setCena(String(selectedRow.cena));
-        } else {
-            setNaziv('');
-            setCena('');
+            setCena(selectedRow.cena.toString());
+            setType(selectedRow.type); // Add this line to set the type
         }
     }, [selectedRow]);
 
 
     // UPDATE
     const isNumeric = (value: string): boolean => {
-        return /^[0-9]+$/.test(value);
-    };
+        return /^\d+(\.\d+)?$/.test(value);
+      };
     const handleTypes = async () => {
         if(naziv == null || typeof naziv !== "string" || naziv == '' || cena == null || !isNumeric(cena)){
           Alert.alert(
@@ -65,13 +71,14 @@ const getPice = () => {
                 ...selectedRow,
                 naziv: naziv.trim(),
                 cena: Number(cena),
+                type: type,
             };
             try {
                 await database.runAsync("UPDATE pice SET deleted = 'true' WHERE id_pice = ?", [
                     updatedRow.id_pice,
                 ]);
-                await database.runAsync("INSERT INTO pice (naziv, cena, deleted) VALUES (?, ?, ?);", [
-                    updatedRow.naziv, updatedRow.cena, "false"
+                await database.runAsync("INSERT INTO pice (naziv, cena, type, deleted) VALUES (?, ?, ?, ?);", [
+                    updatedRow.naziv, updatedRow.cena, updatedRow.type, "false"
                   ]);
                 await loadData();
                 Alert.alert("Success", "Piće uspešno ažurirano.");
@@ -110,67 +117,111 @@ const getPice = () => {
         }
     }
 
-  return (
-    <SafeAreaView className='h-full flex bg-primary'>
-        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-            <View className="mt-4 px-4">
-                <View className="flex-row justify-between border-b-2 border-black pb-2 mb-2">
-                    <Text className="text-lg font-bold">Naziv</Text>
-                    <Text className="text-lg font-bold">Cena</Text>
-                </View>
-                {data.map((item) => (
-                    <TouchableOpacity
-                        key={item.id_pice}
-                        className={`flex-row justify-between border-b border-gray-300 py-2 ${
-                        selectedRow?.id_pice === item.id_pice ? "bg-orange" : ""
-                        }`}
-                        onPress={() => setSelectedRow(item)}
-                    >
-                        <Text>{item.naziv}</Text>
-                        <Text>{item.cena} RSD</Text>
-                    </TouchableOpacity>
-        ))}
-                    {selectedRow && (
-                    <View className="mt-4">
-                        <Text className="text-lg font-semibold">
-                            Izabrano Piće: {selectedRow.naziv} - {selectedRow.cena} RSD
-                        </Text>
-                        <View className='w-full flex-row justify-center mt-3'>
-                            <TouchableOpacity 
-                            className='mt-4 bg-orange mx-2 items-center w-1/4 rounded-md py-4 px-4'
-                            onPress={async () => handleTypes()}
-                            >
-                                <Text>Promeni Piće</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity 
-                            className='mt-4 bg-red-500 mx-2 items-center w-1/4 rounded-md py-4 px-4'
-                            onPress={async () => handleDelete()}
-                            >
-                                <Text>Izbriši Piće</Text>
-                            </TouchableOpacity>
-                        </View>
-                        <View className="mt-4 px-4 justify-center items-center">
-                            <Text className='text-center'>Naziv</Text>
-                            <TextInput
-                                placeholder='Naziv'
-                                value={naziv}
-                                onChangeText={(text) => setNaziv(text)}
-                                className='w-3/4 mt-2 border border-gray-300 bg-white rounded-md p-3 text-gray-700'
-                            />
-                            <Text className='text-center mt-2'>Cena</Text>
-                            <TextInput
-                                placeholder='Cena'
-                                value={cena}
-                                onChangeText={(text) => setCena(text)}
-                                className='w-3/4 mt-2 border border-gray-300 bg-white rounded-md p-3 text-gray-700'
-                            />
-                        </View>
+    return (
+        <SafeAreaView className='h-full flex bg-primary'>
+            <ScrollView keyboardShouldPersistTaps='handled' contentContainerStyle={{ flexGrow: 1 }}>
+                <View className="mt-4 px-6 mx-auto w-full max-w-2xl">
+                    {/* Table Header */}
+                    <View className="flex-row justify-between border-b-2 border-black pb-3 mb-4">
+                        <Text className="text-lg font-bold flex-1 text-center">Naziv</Text>
+                        <Text className="text-lg font-bold flex-1 text-center">Cena</Text>
+                        <Text className="text-lg font-bold flex-1 text-center">Tip</Text>
                     </View>
-                )}
-            </View>
-        </ScrollView>
-    </SafeAreaView>
-  )
+    
+                    {/* Table Data */}
+                    {data.map((item) => (
+                        <TouchableOpacity
+                            key={item.id_pice}
+                            className={`flex-row justify-between border-b border-gray-300 py-3 ${
+                                selectedRow?.id_pice === item.id_pice ? "bg-orange" : ""
+                            }`}
+                            onPress={() => setSelectedRow(item)}
+                        >
+                            <Text className="flex-1 text-center">{item.naziv}</Text>
+                            <Text className="flex-1 text-center">{item.cena} RSD</Text>
+                            <Text className="flex-1 text-center">
+                                {item.type === 'piece' && 'Komad'}
+                                {item.type === 'liters' && 'Mililitar'}
+                                {item.type === 'kilograms' && 'Miligram'}
+                                {item.type === 'other' && 'Ostalo'}
+                            </Text>
+                        </TouchableOpacity>
+                    ))}
+    
+                    {/* Selected Item Form */}
+                    {selectedRow && (
+                        <View className="mt-6 w-full">
+                            <Text className="text-lg font-semibold text-center">
+                                Izabrano Piće: {selectedRow.naziv} - {selectedRow.cena} RSD
+                            </Text>
+    
+                            {/* Action Buttons */}
+                            <View className='w-full flex-row justify-center mt-4'>
+                                <TouchableOpacity 
+                                    className='bg-orange mx-2 items-center w-1/3 rounded-md py-4'
+                                    onPress={async () => handleTypes()}
+                                >
+                                    <Text>Promeni Piće</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity 
+                                    className='bg-red-500 mx-2 items-center w-1/3 rounded-md py-4'
+                                    onPress={async () => handleDelete()}
+                                >
+                                    <Text>Izbriši Piće</Text>
+                                </TouchableOpacity>
+                            </View>
+    
+                            {/* Edit Form */}
+                            <View className="mt-6 w-full items-center">
+                                <View className="w-full max-w-md">
+                                    <Text className='text-center text-lg mb-2'>Naziv</Text>
+                                    <TextInput
+                                        placeholder='Naziv'
+                                        value={naziv}
+                                        onChangeText={(text) => setNaziv(text)}
+                                        className='w-full mb-4 border border-gray-300 bg-white rounded-md p-3 text-gray-700'
+                                    />
+    
+                                    <Text className='text-center mt-2 text-lg font-medium text-gray-700'>Cena</Text>
+                                    <View className="relative w-full mt-2">
+                                        <TextInput
+                                        placeholder='Cena'
+                                        value={cena}
+                                        keyboardType="number-pad"
+                                        onChangeText={(text) => setCena(text)}
+                                        className='w-full border border-gray-300 bg-white rounded-md p-3 text-gray-700 pr-12'
+                                        />
+                                        {/* Button inside the input */}
+                                        <TouchableOpacity
+                                        onPress={handleAddDot}
+                                        className="absolute h-10 w-10 right-2 top-2 p-2 bg-gray-200 rounded-md"
+                                        >
+                                        <Text className="text-sm font-bold text-gray-600">.</Text>
+                                        </TouchableOpacity>
+                                    </View>
+    
+                                    <Text className='text-center text-lg mb-2 font-medium text-gray-700'>Tip</Text>
+                                    <View className="w-full bg-white border border-gray-300 rounded-lg overflow-hidden shadow-md mb-4">
+                                        <Picker
+                                            selectedValue={type}
+                                            onValueChange={(itemValue) => setType(itemValue)}
+                                            style={{ height: 60, width: '100%' }}
+                                            dropdownIconColor="#6B7280"
+                                        >
+                                            <Picker.Item label="Komadno" value="piece" />
+                                            <Picker.Item label="Mililitarsko" value="liters" />
+                                            <Picker.Item label="Miligramsko" value="kilograms" />
+                                            <Picker.Item label="Ostalo" value="other" />
+                                        </Picker>
+                                    </View>
+                                </View>
+                            </View>
+                        </View>
+                    )}
+                </View>
+            </ScrollView>
+        </SafeAreaView>
+    )
 }
 
 export default getPice

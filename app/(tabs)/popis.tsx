@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, TextInput, TouchableOpacity, Alert  } from 'react-native'
+import { View, Text, ScrollView, TextInput, TouchableOpacity, Alert, BackHandler } from 'react-native'
 import { router } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
 import { useState, useCallback, useEffect } from 'react'
@@ -7,12 +7,16 @@ import { useSQLiteContext } from 'expo-sqlite';
 import { useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { FontAwesome5, MaterialIcons, AntDesign } from '@expo/vector-icons';
-import DialogModal from "../../components/DialogModal";
-import { Pice } from '@/models/Pice';
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import DialogModal from '@/components/DialogModal';
 import React from 'react'
-import { StavkaPopisa } from '@/models/StavkaPopisa';
+import PTDialogModal from '@/components/PTDialogModal';
 
 const Popis = () => {
+
+  // LOGIN & LOGOUT
+  // ================================================================================================================
+  // ================================================================================================================
   const { userData, setUserData } = useAuth();
   const logoutConfirm = () => {
     Alert.alert(
@@ -31,6 +35,12 @@ const Popis = () => {
     }
   };
 
+  
+
+
+  // ================================================================================================================
+  // ================================================================================================================
+
   // DATE
   // ================================================================================================================
   // ================================================================================================================
@@ -45,7 +55,7 @@ const Popis = () => {
   const now = new Date();
   const serbianTimeString = new Intl.DateTimeFormat("sr-RS", {
     timeZone: "Europe/Belgrade",
-    hour: "2-digit",
+    hour: "2-digit",  
     minute: "2-digit",
   }).format(now);
   
@@ -60,62 +70,81 @@ const Popis = () => {
   // ================================================================================================================
   // ================================================================================================================
 
-  interface UserInput {
-    uneto?: number;
-    kraj?: number;
-    inputString?: string;
-    calculationString?: string;
+  interface PrihodiTroskoviInputs {
+    kuhinja: string; ks: string; ostalop: string;
+    ostalopOpis: string; wolt: string; glovo: string; sale: string; 
+    kartice: string; ostalot: string; virman: string; ostalotOpis: 
+    string; virmanOpis: string;
   }
 
-  interface AdditionalInputs {
-    datum: Date;
-    kuhinja: string;
-    ks: string;
-    ostalop: string;
-    ostalopOpis: string;
-    wolt: string;
-    glovo: string;
-    sale: string;
-    kartice: string;
-    ostalot: string;
-    virman: string;
-    ostalotOpis: string;
-    virmanOpis: string;
-    ukupnoAll: string;
-    smena: string;
+  interface OtherInputs {
+    datum: string; ukupnoAll: string; smena:string
   }
 
+  type InputValues = {
+    [key: number]: {
+        pocetak: string
+        uneto: string;
+        kraj: string;
+    };
+  };
+    
+  type PiceTableProps = {
+      dataPice: Pice[];
+      stavkePopisa: Stavka_Popisa[];
+  };
+
+  type Pice = {
+    id_pice: number; naziv: string; cena: string;
+    type: string; pocetno_stanje?: string; prodato?: string;
+  };
+
+  type Stavka_Popisa = {
+    id_stavka_popisa: number; id_popis: number; pocetno_stanje: string;
+    uneto: string; krajnje_stanje: string; prodato: string; ukupno: string; id_pice: number;
+  };
+
+  type Popis = {
+    id_popis: number; datum: string; kuhinja: string; kuhinjaSt: string; ostalop: string;
+    ostalopOpis: string; wolt: string; glovo: string; kartice: string; sale: string;
+    ostalot: string; ostalotOpis: string; virman: string; virmanOpis: string;
+    ukupno: string; smena: string; id_korisnik: number;
+  };
+
+
   // ================================================================================================================
   // ================================================================================================================
 
 
-  // USESTATE FOR USER INPUTS
+  // USESTATE HOOKS
   // ================================================================================================================
   // ================================================================================================================
-  
-  const [userInputs, setUserInputs] = useState<Record<number, UserInput>>({});
-  
-  const [additionalInputs, setAdditionalInputs] = useState<AdditionalInputs>({
-    datum: now,
-    kuhinja: '',
-    ks: '',
-    ostalop: '',
-    ostalopOpis: '',
-    wolt: '',
-    glovo: '',
-    sale: '',
-    kartice: '',
-    ostalot: '',
-    virman: '',
-    ostalotOpis: '',
-    virmanOpis: '',
-    ukupnoAll: '',
-    smena: ''
+
+  const [PTInptus, setPTInptus] = useState<PrihodiTroskoviInputs>({
+    kuhinja: '', ks: '', ostalop: '', ostalopOpis: '', wolt: '',
+    glovo: '', sale: '', kartice: '', ostalot: '', virman: '', ostalotOpis: '',
+    virmanOpis: ''
   });
   
-  const [dialogValue, setDialogValue] = useState<string>(""); 
-  const [isDialogVisible, setIsDialogVisible] = useState(false);
-  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const [otherInputs, setOtherInputs] = useState({
+    datum: new Date().toLocaleString("en-GB", { timeZone: "Europe/Belgrade" }),
+    smena: '' 
+  })
+  
+  const [inputValues, setInputValues] = useState<InputValues>({});
+
+  const [piceData, setPiceData] = useState<Pice[]>([]);
+  const [stavkaData, setstavkaData] = useState<Stavka_Popisa[]>([]);
+  const [touchedInputs, setTouchedInputs] = useState<Set<string>>(new Set());
+  
+  // Stavke Modal
+  const [modalVisible, setModalVisible] = useState<boolean>(false);
+  const [currentId, setCurrentId] = useState<number | null>(null);
+
+  // PT Modal
+  const [isDialogVisiblePrihodi, setIsDialogVisiblePrihodi] = useState(false);
+  const [isDialogVisibleTroskovi, setIsDialogVisibleTroskovi] = useState(false);
+  const [isDialogVisibleVirman, setIsDialogVisibleVirman] = useState(false);
 
   // ================================================================================================================
   // ================================================================================================================
@@ -125,124 +154,285 @@ const Popis = () => {
   // ================================================================================================================
   // ================================================================================================================
  
+  useFocusEffect(
+    useCallback(() => {
+      fetchData()
+    }, [])
+    );
+
   const database = useSQLiteContext();
-  const [data, setData] = useState<Pice[]>([]);
-  const [stavka, setStavka] = useState<StavkaPopisa[]>([]);
 
-  const loadData = async () => {
-    const result = await database.getAllAsync<Pice>("SELECT * FROM pice WHERE deleted = 'false'; ");
-    setData(result);
-  };
-
-  const getLastPopisStavke = async () => {
+  const fetchData = async () => {
     try {
-      const result = await database.getAllAsync<StavkaPopisa>(`
-        SELECT * FROM stavka_popisa WHERE id_popis = (SELECT MAX(id_popis) FROM popis);
-      `);
-      setStavka(result);
+      const resultPice = await database.getAllAsync<Pice>("SELECT * FROM pice WHERE deleted = 'false'");
+      setPiceData(resultPice);
+
+      const resultStavka = await database.getAllAsync<Stavka_Popisa>(`
+      SELECT * FROM stavka_popisa WHERE id_popis = (SELECT MAX(id_popis) FROM popis);
+    `);
+    setstavkaData(resultStavka);
     } catch (error) {
-      console.error("Error fetching stavka_popisa for the last popis:", error);
+      console.error("Error fetching data: ", error);
     }
   };
 
+
+  
+  const logInventoryChange = async (
+    id_pice: number,
+    id_korisnik: number,
+    old_value: number,
+    new_value: number
+  ): Promise<void> => {  
+    try {
+      const localTimestamp = new Date().toLocaleString("en-US", { timeZone: "Europe/Belgrade" });
+      await database.runAsync(`
+      INSERT INTO change_history (
+        id_pice,
+        id_korisnik,
+        old_value,
+        new_value,
+        timestamp
+      ) VALUES (?, ?, ?, ?, ?);
+    `, [id_pice, id_korisnik, old_value, new_value, localTimestamp]); 
+    } catch (error) {
+      console.error('Transaction error:', error);
+    }
+  };
   // ================================================================================================================
   // ================================================================================================================
 
-
-  // RENDER DATA
+  // USEEFFECT
   // ================================================================================================================
   // ================================================================================================================
+  const [appWasLeft, setAppWasLeft] = useState(false);
 
-  const initializeInputs = () => {
-    const initialInputs: Record<number, UserInput> = {};
-    data.forEach((_, index) => {
-      initialInputs[index] = {
-        uneto: 0,
-        kraj: 0
+  // Load saved inputValues from AsyncStorage on mount
+  useEffect(() => {
+    const loadInputValues = async () => {
+      try {
+        const savedInputValues = await AsyncStorage.getItem('inputValues');
+        const lastActiveTimestamp = await AsyncStorage.getItem('lastActiveTimestamp');
+        
+        // Check if the app was closed (you can adjust the time threshold as needed)
+        const now = new Date().getTime();
+        const lastActive = lastActiveTimestamp ? parseInt(lastActiveTimestamp) : 0;
+        const timeDifference = now - lastActive;
+        
+        // If more than 1 hour has passed or no timestamp exists, consider it a new session
+        // 1 Second = 1000
+        if (timeDifference > 1000 || !lastActiveTimestamp) {
+          setAppWasLeft(true);
+          // Clear the stored values
+          await AsyncStorage.removeItem('inputValues');
+        } else if (savedInputValues) {
+          setInputValues(JSON.parse(savedInputValues));
+        }
+      } catch (error) {
+        console.error('Error loading inputValues:', error);
+      }
+    };
+    loadInputValues();
+  }, []);
+
+  // Save inputValues and timestamp to AsyncStorage on unmount
+  useEffect(() => {
+    return () => {
+      const saveInputValues = async () => {
+        try {
+          await AsyncStorage.setItem('inputValues', JSON.stringify(inputValues));
+          await AsyncStorage.setItem('lastActiveTimestamp', new Date().getTime().toString());
+        } catch (error) {
+          console.error('Error saving inputValues:', error);
+        }
+      };
+      saveInputValues();
+    };
+  }, [inputValues]);
+
+  // Initialize inputValues with only pocetak values
+  useEffect(() => {
+    const initialValues: InputValues = {};
+    const initialOldValues: { [key: number]: number } = {};
+
+    piceData.forEach((item) => {
+      const stavka = stavkaData.find((stavka) => stavka.id_pice === item.id_pice);
+      const evaluatedValue = stavka?.krajnje_stanje 
+      ? eval(stavka.krajnje_stanje.toString()).toString() 
+      : '0'
+      const originalValue = parseFloat(evaluatedValue);
+
+      initialValues[item.id_pice] = {
+        pocetak: evaluatedValue || '',
+        uneto: appWasLeft ? '' : (inputValues[item.id_pice]?.uneto || ''),
+        kraj: appWasLeft ? '' : (inputValues[item.id_pice]?.kraj || ''),
+      };
+
+      // Store original value as old value
+      initialOldValues[item.id_pice] = originalValue;
+    });
+
+    setInputValues(initialValues);
+    setOldValue(initialOldValues);
+
+    if (appWasLeft) {
+      setAppWasLeft(false);
+    }
+  }, [piceData, stavkaData, appWasLeft]);
+
+  // Initialize inputValues with only pocetak values
+  useEffect(() => {
+    const initialValues: InputValues = {};
+    piceData.forEach((item) => {
+      const stavka = stavkaData.find((stavka) => stavka.id_pice === item.id_pice);
+      const evaluatedValue = stavka?.krajnje_stanje 
+      ? eval(stavka.krajnje_stanje.toString()).toString() 
+      : '0'
+
+      initialValues[item.id_pice] = {
+        pocetak: evaluatedValue || '',
+        uneto: inputValues[item.id_pice]?.uneto || '', // Restore uneto if it exists
+        kraj: inputValues[item.id_pice]?.kraj || '', // Restore kraj if it exists
       };
     });
-    setUserInputs(initialInputs);
-  };
-
-  useFocusEffect(
-    useCallback(() => {
-      loadData();
-      getLastPopisStavke();
-      initializeInputs();
-      return () => {
-        setData([])
-        setUserInputs({})
-      }
-    }, [])
-  );
+    setInputValues(initialValues);
+  }, [piceData, stavkaData]);
+  
 
   // ================================================================================================================
   // ================================================================================================================
 
-
-  // METHODS FOR HANDLEING INPUTS AND DIALOGS
+  // INPUTES LOGIC
   // ================================================================================================================
   // ================================================================================================================
 
-  const handleInputChange = (index: number, field: keyof UserInput, value: string) => {
-    setUserInputs((prev) => ({
+  const handleInputChange = (id_pice: number, field: keyof InputValues[number], value: string) => {
+    const inputKey = `${id_pice}-${field}`;
+    setTouchedInputs(prev => new Set(prev).add(inputKey));
+    
+    setInputValues((prev) => ({
       ...prev,
-      [index]: {
-        ...prev[index],
-        [field]: isNaN(Number(value)) ? 0 : Number(value)
-      }
+      [id_pice]: {
+        ...prev[id_pice],
+        [field]: value,
+      },
     }));
   };
 
-  const handleDialogConfirm = () => {
-    if (activeIndex !== null) {
-      // Parse the input, calculate the sum, and update the state
-      const sum = dialogValue
-        .split("+")
-        .map((val) => Number(val.trim()))
-        .reduce((acc, num) => acc + num, 0);
-  
-      setUserInputs((prev) => ({
-        ...prev,
-        [activeIndex]: {
-          ...prev[activeIndex],
-          kraj: sum,
-          calculationString: dialogValue  // Store the calculation string
-        },
-      }));
+  const [oldValue, setOldValue] = useState<{ [key: number]: number }>({});
+
+  const handleBlur = (item: any, currentValue: string) => {
+  const id_pice = item.id_pice;
+  const numericValue = parseFloat(currentValue) || 0;
+  const previousValue = oldValue[id_pice] || 0;
+
+  if (numericValue !== previousValue && userData) {
+    logInventoryChange(
+      id_pice, 
+      userData?.id_korisnik,
+      previousValue, 
+      numericValue
+    );
+  }
+
+  // Reset the old value for this specific item
+  setOldValue(prev => ({
+    ...prev,
+    [id_pice]: numericValue
+  }));
+
+};
+
+
+  // ================================================================================================================
+  // ================================================================================================================
+
+  // DIALOG
+  // ================================================================================================================
+  // ================================================================================================================
+
+  const handleDialogPress = (id: number) => {
+    setCurrentId(id);
+    setModalVisible(true);
+  };
+
+  const handleDialogConfirm = (value: string) => {
+    if (currentId !== null) {
+      handleInputChange(currentId, 'kraj', value); // Update the correct row's `kraj` value
     }
-    setIsDialogVisible(false);
+    setModalVisible(false); // Close the modal
   };
 
-  const openDialog = (index: number) => {
-    setActiveIndex(index);
-    // Set the dialog value to the previous calculation string if it exists
-    setDialogValue(userInputs[index]?.calculationString || "");
-    setIsDialogVisible(true);
+  const calculateSum = (expression: string): number => {
+    if (!expression) return 0;
+    const numbers = expression.split('+').map(Number);
+    return numbers.reduce((acc, num) => acc + num, 0);
   };
 
-  const handleAddPlus = () => {
-    setDialogValue((prev) => prev + "+");
+  const calculateTotalSum = () => {
+    return piceData.reduce((total, item) => {
+      const pocetak = parseFloat(inputValues[item.id_pice]?.pocetak || '0');
+      const uneto = parseFloat(inputValues[item.id_pice]?.uneto || '0');
+      const kraj = calculateSum(inputValues[item.id_pice]?.kraj || '0');
+      
+      const prodato = item.type === "other" 
+        ? (kraj - pocetak) 
+        : (uneto + pocetak) - kraj;
+      
+      const ukupno = prodato * parseFloat(item.cena);
+      
+      return total + ukupno;
+    }, 0);
   };
 
-  // ================================================================================================================
-  // ================================================================================================================
-
-  // POPIS VALIDATION AND CREATE
-  // ================================================================================================================
-  // ================================================================================================================
-
-  const isPositiveNumberOrZero = (value: any): boolean => {
-    const num = Number(value);
-    return !isNaN(num) && num >= 0;
+  const evaluateExpression = (expression: string): string => {
+    if (!expression) return '';
+    try {
+      // Only evaluate if the expression contains operators
+      if (/[+\-*/]/.test(expression)) {
+        // Replace multiple operators with single ones and remove spaces
+        const sanitizedExp = expression.replace(/\s+/g, '').replace(/([+\-*/])+/g, '$1');
+        return String(eval(sanitizedExp));
+      }
+      return expression;
+    } catch (error) {
+      return expression; // Return original expression if evaluation fails
+    }
   };
+  
+
+  const handleChangePrihodi = (value: string) => {
+    console.log('Saving Prihodi value to PTInptus:', value); // This should show "5+5"
+    setPTInptus((prev) => ({ ...prev, ostalop: value }));
+  };
+  
+  const handleChangeTroskovi = (value: string) => {
+    console.log('Saving Troskovi value to PTInptus:', value); // This should show "5+5"
+    setPTInptus((prev) => ({ ...prev, ostalot: value }));
+  };
+
+  const handleChangeVirman = (value: string) => {
+    console.log('Saving Virman value to PTInptus:', value); // This should show "5+5"
+    setPTInptus((prev) => ({ ...prev, virman: value }));
+  };
+
+  const handleOpenDialogPrihodi = () => setIsDialogVisiblePrihodi(true);
+  const handleCloseDialogPrihodi = () => setIsDialogVisiblePrihodi(false);
 
   
-  const isValidString = (value: any): boolean => {
-    return typeof value === 'string' && value.trim().length > 0;
-  };
-    
-  // Check if date of Popis already has Prva or Druga smena
+  const handleOpenDialogTroskovi = () => setIsDialogVisibleTroskovi(true);
+  const handleCloseDialogTroskovi = () => setIsDialogVisibleTroskovi(false);
+  
+  const handleOpenDialogVirman = () => setIsDialogVisibleVirman(true);
+  const handleCloseDialogVirman = () => setIsDialogVisibleVirman(false);
+
+  // ================================================================================================================
+  // ================================================================================================================
+
+  // POPIS HANDLE
+  // ================================================================================================================
+  // ================================================================================================================
+
   const checkExistingPopis = async (date: string, smena: string): Promise<boolean> => {
     try {
       const result = await database.getAllAsync(`
@@ -258,331 +448,245 @@ const Popis = () => {
     }
   };
 
-  // Helper function to get default value for numeric fields
-  const getDefaultNumericValue = (value: string | number | undefined): string => {
-    if (value === undefined || value === null || value === '') {
-      return '0';
-    }
-    return value.toString();
-  };
-
-
-  // Validation function
-  const validatePopis = async (): Promise<{ isValid: boolean; errors: string[] }> => {
-    
+  const validateInputs = async () => {
     const errors: string[] = [];
-    
-    // Validate shift selection
-    if (!additionalInputs.smena) {
+  
+    // Validate Smena
+    if (!otherInputs.smena) {
       errors.push('Morate izabrati smenu (prva ili druga).');
     }
-
-    // Check for existing popis with same date and shift
-    if (additionalInputs.smena) {
+  
+    if (otherInputs.smena) {
       const today = new Date().toISOString().split('T')[0];
-      const existingPopis = await checkExistingPopis(today, additionalInputs.smena);
-      
+      const existingPopis = await checkExistingPopis(today, otherInputs.smena);
+  
       if (existingPopis) {
-        errors.push(`Već postoji ${additionalInputs.smena} smena na današnji datum.`);
+        errors.push(`Već postoji ${otherInputs.smena} smena na današnji datum.`);
       }
     }
-
-    // Validate first table (inventory items)
-    data.forEach((item, index) => {
-      const itemName = item.naziv || `Item ${index + 1}`;
-      const input = userInputs[index];
   
-      // Check if input exists at all
-      if (!input || input.uneto === undefined || input.uneto === null) {
-        errors.push(`Morate uneti vrednost za ${itemName}.`);
-        return;
-      }
-  
-      const unetoValue = getDefaultNumericValue(input.uneto);
+    // Validate Pice Table Calculations
+    piceData.forEach(item => {
+      const pocetak = parseFloat(inputValues[item.id_pice]?.pocetak || '0');
+      const uneto = parseFloat(inputValues[item.id_pice]?.uneto || '0');
+      const kraj = calculateSum(inputValues[item.id_pice]?.kraj || '0');
+      const prodato = (uneto + pocetak) - kraj;
+      const ukupno = prodato * parseFloat(item.cena);
 
-      if (!isPositiveNumberOrZero(unetoValue)) {
-        errors.push(`Uneto za ${itemName} mora biti pozitivan broj.`);
-      }
-  
-      const krajValue = getDefaultNumericValue(input.kraj);
-      if (!isPositiveNumberOrZero(krajValue)) {
-        errors.push(`Kraj za ${itemName} mora biti pozitivan broj.`);
-      }
-      
-      if(item.naziv === "Espresso"){
-        const ukupnoEspresso = calculateUkupnoKafa(item, input, stavka);
-        if(!isPositiveNumberOrZero(ukupnoEspresso)){
-          errors.push(`Ukupno za Espresso mora biti pozitivan broj.`)
-        }
-      } else {
-        const ukupno = calculateUkupno(item, input, stavka);
-        if (!isPositiveNumberOrZero(ukupno)) {
-          errors.push(`Ukupno za ${itemName} mora biti pozitivan broj.`);
-        }
-      }
+      const prodato_other = (kraj - pocetak);
+      const ukupno_other = prodato_other * parseFloat(item.cena);
 
-      
+      if (item.type !== "other" && ukupno < 0) {
+        errors.push(`Ukupno za ${item.naziv} ne može biti negativno.`);
+      }
+      if(item.type === "other" && ukupno_other < 0){
+         errors.push(`Ukupno za ${item.naziv} ne može biti negativno.`);
+      }
     });
   
-    // Validate numeric fields in second table
-    const numericFields = [
-      { key: 'kuhinja', name: 'Kuhinja' },
-      { key: 'ks', name: 'Kuhinja Storno' },
-      { key: 'ostalop', name: 'Ostali Prihodi'},
-      { key: 'wolt', name: 'Wolt' },
-      { key: 'glovo', name: 'Glovo' },
-      { key: 'sale', name: 'Sale' },
-      { key: 'ostalot', name: 'Ostali Troškovi' },
-      { key: 'virman', name: 'Virman' }
+    // Validate PTInputs (Prihodi i Troškovi)
+    const numericInputs: (keyof PrihodiTroskoviInputs)[] = [
+      'kuhinja', 'ks', 'ostalop', 
+      'wolt', 'glovo', 'sale', 
+      'kartice', 'ostalot', 'virman'
     ];
   
-    numericFields.forEach(({ key, name }) => {
-      const value = getDefaultNumericValue(additionalInputs[key as Exclude<keyof AdditionalInputs, 'datum'>]);
-      if (!isPositiveNumberOrZero(value)) {
-        errors.push(`${name} mora biti pozitivan broj.`);
-      }
+    numericInputs.forEach(field => {
+      const value = parseFloat(PTInptus[field] || '0');
+      if (value < 0) errors.push(`Polje ${field} ne može biti negativno.`);
     });
+  
+    // Display all errors at once if any exist
+    if (errors.length > 0) {
+      Alert.alert(
+        'Greške',
+        errors.map((error, index) => `${index + 1}. ${error}`).join('\n')
+      );
+      return false;
+    }
+  
+    return true;
+  };
 
-    const textFields = [
-      { key: 'ostalopOpis', name: 'Opis ostalih prihoda' },
-      { key: 'ostalotOpis', name: 'Opis ostalih troškova' },
-      { key: 'virmanOpis', name: 'Opis virmana' }
-    ];
+  const fieldLabels: Record<keyof PrihodiTroskoviInputs, string> = {
+    kuhinja: "Kuhinja", ks: "Kuhinja Storno", ostalop: "Ostali prihodi",
+    ostalopOpis: "Ostali prihodi - Opis", wolt: "Wolt", glovo: "Glovo",
+    sale: "Sale", kartice: "Kartice", ostalot: "Ostali troškovi", virman: "Virman", 
+    ostalotOpis: "Ostali troškovi - Opis", virmanOpis: "Virman - Opis",
+  };
   
-    // Validate description fields
-    textFields.forEach(({ key, name }) => {
-      const value = getDefaultNumericValue(additionalInputs[key as Exclude<keyof AdditionalInputs, 'datum'>]);
-      if (value && !isValidString(value)) {
-        errors.push(`${name} mora biti validan tekst.`);
-      }
-    });
+  const validatePrihodiTroskoviInputs = (PTInputs: PrihodiTroskoviInputs, callback: () => void) => {
+    const emptyFields = Object.entries(PTInputs)
+      .filter(([_, value]) => value.trim() === "")
+      .map(([key]) => fieldLabels[key as keyof PrihodiTroskoviInputs] || key); // Convert to user-friendly labels
   
-    return {
-      isValid: errors.length === 0,
-      errors
-    };
+    if (emptyFields.length > 0) {
+      Alert.alert(
+        "Upozorenje",
+        `Neka polja nisu popunjena:\n\n${emptyFields.join("\n")}\n\nAko ne popunite polja, zapamtiće se podrazumevana vrednost. Da li želite da nastavite?`,
+        [
+          { text: "Ne", style: "cancel" },
+          { text: "Da", onPress: callback }
+        ]
+      );
+    } else {
+      callback();
+    }
   };
   
   const popisConfirm = () => {
-    Alert.alert(
-      "Adding Confirmation",
-      "Da li želite da završite popis? Upozorenje: Ako završite popis za današnji datum i trenutnu smenu, nećete moći da završite ponovo za istu smenu.",
-      [{ text: "Ne" , style: 'cancel'}, { text: "Da", onPress: async () => handleZavrsiPopis()}]
-    );
-  }
+    validatePrihodiTroskoviInputs(PTInptus, () => {
+      Alert.alert(
+        "Potvrda dodavanja",
+        "Da li želite da završite popis? Upozorenje: Ako završite popis za današnji datum i trenutnu smenu, nećete moći da završite ponovo za istu smenu.",
+        [{ text: "Ne", style: "cancel" }, { text: "Da", onPress: async () => handleZavrsiPopis() }]
+      );
+    });
+  };
+
 
   const handleZavrsiPopis = async () => {
-    try {
-      const validation = await validatePopis();
-      
-      if (!validation.isValid) {
-        Alert.alert(
-          'Greška u unosu',
-          validation.errors.join('\n\n'),
-          [{ text: 'OK' }]
-        );
-        return;
-      }
+    const isValid = await validateInputs();
+    if(isValid){
+      // DEBUG
+      console.log("Popis Confirmed! Here are the input values:");
+      console.log(JSON.stringify(inputValues, null, 2));
+      console.log("Prihodi & Troskovi Inputs:");
+      console.log(JSON.stringify(PTInptus, null, 2));
+      console.log("Other Inputs:");
+      console.log(JSON.stringify(otherInputs, null, 2));
+      const test1 = new Date().toISOString().split('T')[0]
+      const test = new Date().toLocaleString("en-GB", { timeZone: "Europe/Belgrade" }).split('T')[0];
+      console.log("Datum new Date: " + test )
+      console.log("Datum new Date no Belgrade: " + test1)
+      try {
+        const result = await database.runAsync(`
+          INSERT INTO popis (
+            datum, kuhinja, kuhinjaSt, ostalop,
+            ostalopOpis, wolt, glovo, kartice,
+            sale, ostalot, ostalotOpis, virman,
+            virmanOpis, smena, id_korisnik
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+        `, [
+          new Date().toISOString().split('T')[0], PTInptus.kuhinja || "0", PTInptus.ks || "0", PTInptus.ostalop || "0",
+          PTInptus.ostalopOpis, PTInptus.wolt || "0", PTInptus.glovo || "0", PTInptus.kartice || "0",
+          PTInptus.sale || "0", PTInptus.ostalot || "0", PTInptus.ostalotOpis, PTInptus.virman || "0",
+          PTInptus.virmanOpis, otherInputs.smena, Number(userData?.id_korisnik)
+        ]);
   
-      // If validation passes, proceed with saving the popis
-      const result = await database.runAsync(`
-        INSERT INTO popis (
-          datum,
-          kuhinja,
-          kuhinjaSt,
-          ostalop,
-          ostalopOpis,
-          wolt,
-          glovo,
-          kartice,
-          sale,
-          ostalot,
-          ostalotOpis,
-          virman,
-          virmanOpis,
-          ukupno,
-          smena,
-          id_korisnik
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-      `, [
-        additionalInputs.datum.toISOString().split('T')[0],
-        Number(additionalInputs.kuhinja) || 0,
-        Number(additionalInputs.ks) || 0,
-        Number(additionalInputs.ostalop) || 0,
-        additionalInputs.ostalopOpis,
-        Number(additionalInputs.wolt) || 0,
-        Number(additionalInputs.glovo) || 0,
-        Number(additionalInputs.kartice) || 0,
-        Number(additionalInputs.sale) || 0,
-        Number(additionalInputs.ostalot) || 0,
-        additionalInputs.ostalotOpis,
-        Number(additionalInputs.virman) || 0,
-        additionalInputs.virmanOpis,
-        Number(additionalInputs.ukupnoAll) || 0,
-        additionalInputs.smena,
-        Number(userData?.id_korisnik)
-      ]);
+        const insertId = result.lastInsertRowId;
   
-      // Get the ID of the newly inserted popis
-      const insertId = result.lastInsertRowId;
+        // Insert Stavke Popisa
+        for (const item of piceData) {
+          const inputValue = inputValues[item.id_pice];
+          if (!inputValue) continue;
   
+          const pocetak = parseFloat(inputValue.pocetak || '0');
+          const uneto = parseFloat(inputValue.uneto || '0');
+          const kraj_string = inputValue.kraj || '0'
+          const kraj = calculateSum(inputValue.kraj || '0');
+          let prodato = (uneto + pocetak) - kraj;
+          let ukupno = prodato * parseFloat(item.cena);
 
-      // OVDE NEGDE JE BUG
-      for (const [index, input] of Object.entries(userInputs)) {
-        const item = data[Number(index)];
-        if (item && input) {
-          if(item.naziv !== "Espresso"){
-            await database.runAsync(`
-              INSERT INTO stavka_popisa (
-                id_popis,
-                pocetno_stanje,
-                uneto,
-                krajnje_stanje,
-                ukupno,
-                id_pice
-              ) VALUES (?, ?, ?, ?, ?, ?);
-            `, [
-              insertId,
-              stavka.find((s) => s.id_pice === item.id_pice)?.krajnje_stanje || 0,
-              input.uneto || 0,
-              input.kraj || 0,
-              calculateUkupno(item, input, stavka),
-              item.id_pice,
-            ]);
+          const prodato_other = (kraj - pocetak);
+          const ukupno_other = prodato_other * parseFloat(item.cena);
+
+          if (item.type === "other") {
+            const prodato_other = (kraj - pocetak);
+            const ukupno_other = prodato_other * parseFloat(item.cena);
+            prodato = prodato_other; 
+            ukupno = ukupno_other;
           } else {
-            await database.runAsync(`
-              INSERT INTO stavka_popisa (
-                id_popis,
-                pocetno_stanje,
-                uneto,
-                krajnje_stanje,
-                ukupno,
-                id_pice
-              ) VALUES (?, ?, ?, ?, ?, ?);
-            `, [
-              insertId,
-              stavka.find((s) => s.id_pice === item.id_pice)?.krajnje_stanje || 0,
-              input.uneto || 0,
-              input.kraj || 0,
-              calculateUkupnoKafa(item, input, stavka),
-              item.id_pice,
-            ]);
+            prodato = (uneto + pocetak) - kraj;
+            ukupno = prodato * parseFloat(item.cena);
           }
+  
+          console.log("Ubacuje se Stavka... " + item.naziv)
+          console.log("ID Popis: " + insertId)
+          console.log("Pocetak: " + pocetak)
+          console.log("Uneto: " + uneto)
+          console.log("Kraj: " + kraj)
+          console.log("Kraj Stirng: " + kraj_string)
+          console.log("prodato: " + prodato)
+          console.log("ukupno: " + ukupno)
+  
+          await database.runAsync(
+            `INSERT INTO stavka_popisa (
+              id_popis, pocetno_stanje, uneto,
+              krajnje_stanje, prodato,
+              ukupno, id_pice
+            ) VALUES (?, ?, ?, ?, ?, ?, ?);`,
+            [
+              insertId, pocetak, uneto,
+              kraj_string,
+              prodato,
+              ukupno,
+              item.id_pice
+            ]
+          );
         }
+        Alert.alert(
+          'Adding Success',
+          'Popis je uspešno sačuvan! Aplikacija će se resetovati kako bi se sačuvale promene.',
+          [{ text: "OK", onPress: () => {}}]
+          // BackHandler.exitApp()
+        );
+
+        // RESET INPUT VALUES 
+        const initialValues: InputValues = {};
+        piceData.forEach((item) => {
+          const stavka = stavkaData.find((stavka) => stavka.id_pice === item.id_pice);
+          initialValues[item.id_pice] = {
+            pocetak: stavka?.krajnje_stanje || '',
+            uneto: '', // Restore uneto if it exists
+            kraj: '', // Restore kraj if it exists
+          };
+        });
+        setInputValues(initialValues);
+
+      } catch (error) {
+        console.error("Error inserting Popis:", error);
+        Alert.alert("Greška", "Došlo je do greške prilikom čuvanja popisa.");
       }
-  
-      Alert.alert(
-        'Adding Success',
-        'Popis je uspešno sačuvan!',
-        [{
-          text: 'OK',
-          onPress: () => router.replace('/(tabs)/vidiPopis')
-        }]
-      );
-  
-    } catch (error) {
-      console.log(error);
-      Alert.alert(
-        'Greška',
-        'Došlo je do greške prilikom čuvanja popisa.',
-        [{ text: 'OK' }]
-      );
     }
+
+
   };
 
-  // ================================================================================================================
-  // ================================================================================================================
-
-  // OTHER METHODS
-  // ================================================================================================================
-  // ================================================================================================================
-
-  const calculateUkupno = (
-    item: Pice,
-    input: UserInput | undefined,
-    stavka: StavkaPopisa[]
-  ) => {
-    const matchedStavka = stavka.find((s) => s.id_pice === item.id_pice);
-    const pocetnoStanje = matchedStavka?.krajnje_stanje || 0;
-    const cena = item.cena;
-    const uneto = input?.uneto || 0;
-    const kraj = input?.kraj || 0;
-    return (pocetnoStanje + uneto - kraj) * cena;
-  };
-  const calculateUkupnoKafa = (
-    item: Pice,
-    input: UserInput | undefined,
-    stavka: StavkaPopisa[]
-  ) => {
-    const matchedStavka = stavka.find((s) => s.id_pice === item.id_pice);
-    const pocetnoStanje = matchedStavka?.krajnje_stanje || 0;
-    const cena = item.cena;
-    const uneto = input?.uneto || 0;
-    const kraj = input?.kraj || 0;
-    return Math.abs((kraj - (pocetnoStanje + uneto)) * cena);
-  };
-
-  const calculatePazar = (
-    data: Pice[],
-    userInputs: Record<number, UserInput>,
-    stavka: StavkaPopisa[]
-  ) => {
-    return data.reduce((total, item, index) => {
-      const itemTotal =
-        item.naziv === "Espresso"
-          ? calculateUkupnoKafa(item, userInputs[index], stavka)
-          : calculateUkupno(item, userInputs[index], stavka);
-  
-      return total + itemTotal;
-    }, 0);
-  };
-
-  const calculatePrihodi = (inputs: AdditionalInputs) => {
-    return Number(inputs.kuhinja || 0) + Number(inputs.ks || 0) + Number(inputs.ostalop || 0);
-  };
-  
-  const calculateTroskovi = (inputs: AdditionalInputs) => {
-    return (
-      Number(inputs.wolt || 0) +
-      Number(inputs.glovo || 0) +
-      Number(inputs.kartice || 0) +
-      Number(inputs.sale || 0) +
-      Number(inputs.ostalot || 0) +
-      Number(inputs.virman || 0)
-    );
-  };
-
-  useEffect(() => {
-    const total = calculateUkupnoAll();
-    setAdditionalInputs(prev => ({
-      ...prev,
-      ukupnoAll: total.toString()
-    }));
-  }, [userInputs, additionalInputs.kuhinja, additionalInputs.ks, additionalInputs.ostalop, 
-      additionalInputs.wolt, additionalInputs.glovo, additionalInputs.sale, 
-      additionalInputs.ostalot, additionalInputs.virman]);
-
-  const calculateUkupnoAll = () => {
-    return (
-      (calculatePazar(data, userInputs, stavka) + calculatePrihodi(additionalInputs)) - 
-      calculateTroskovi(additionalInputs)
-    );
-  };
   // ================================================================================================================
   // ================================================================================================================
 
   return (
     <SafeAreaView className="flex-1">
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+      <ScrollView keyboardShouldPersistTaps='handled' contentContainerStyle={{ flexGrow: 1 }}>
+        
         {/* Header */}
         <View className="flex bg-secondary rounded-3xl m-4 mb-2 p-4">
-          {/* Logout Button */}
-          <TouchableOpacity
+          {/* Header Buttons */}
+          {userData?.role === "admin" ? (
+            <>
+            <TouchableOpacity
+            className="absolute bottom-4 right-4 bg-secondary rounded-md items-center"
+            onPress={logoutConfirm}
+            >
+              <AntDesign name="logout" size={42} color="#AA0000" />
+            </TouchableOpacity>
+            <TouchableOpacity
+            className="absolute top-4 right-6 bg-secondary rounded-md items-center"
+            onPress={() => router.push("/changeLogs")}
+            >
+              <FontAwesome5 name="bookmark" size={42} color="#FFA500" />
+            </TouchableOpacity>
+            </>
+          ) : (
+            <TouchableOpacity
             className="absolute top-4 right-4 bg-secondary rounded-md items-center"
             onPress={logoutConfirm}
-          >
-            <AntDesign name="logout" size={36} color="#AA0000" />
-          </TouchableOpacity>
+            >
+              <AntDesign name="logout" size={46} color="#AA0000" />
+            </TouchableOpacity>
+          )}
+
 
           {/* Icon and Info Row */}
           <View className="flex flex-row items-center justify-evenly">
@@ -604,294 +708,390 @@ const Popis = () => {
         </View>
 
         {/* Content */}
-        <View className="m-4">
-          <View className="flex flex-row bg-secondary rounded-t-md pb-1">
-            <Text className="flex-1 text-center text-orange text-lg font-bold">Stavke Popisa</Text>
-          </View>
-          <View className="flex flex-row justify-between mt-2 border-b-2 border-black pb-2">
-            <Text className="flex-1 text-center text-lg font-bold">Naziv</Text>
-            <Text className="flex-1 text-center text-lg font-bold">Početak</Text>
-            <Text className="flex-1 text-center text-lg font-bold">Uneto</Text>
-            <Text className="flex-1 text-center text-lg font-bold">Kraj</Text>
-            <Text className="flex-1 text-center text-lg font-bold">Cena</Text>
-            <Text className="flex-1 text-center text-lg font-bold">Ukupno</Text>
+        {["piece", "liters", "kilograms", "other"].map((type) => (
+        <View key={type} className="mb-6 mx-4 border border-gray-300 rounded-lg shadow-md bg-white">
+          {/* Table Title */}
+          <View className="bg-secondary rounded-t-lg p-4">
+            <Text className="text-orange text-2xl font-bold text-center">
+              Stavke Popisa [{type === "piece" ? "kom" : type === "liters" ? "ml" : type === "kilograms" ? "mg" : "Ostalo"}]
+            </Text>
           </View>
 
-          {data.map((item, index) => (
-            <View key={index} className="flex flex-row items-center justify-between py-2 border-b border-black">
-              <Text className="flex-1 text-center">{item.naziv}</Text>
-              <Text className="flex-1 text-center">{stavka.find((s) => s.id_pice === item.id_pice)?.krajnje_stanje || 0}</Text>
+          {/* Table Header */}
+          <View className="flex-row bg-gray-200 border-b-2 border-black py-3">
+            <Text className="w-32 text-center text-l font-bold">Naziv</Text>
+            <Text className="w-24 text-center text-l font-bold">Početak</Text>
+            <Text className="w-24 text-center text-l font-bold">Uneto</Text>
+            <Text className="w-24 text-center text-l font-bold">Kraj</Text>
+            <Text className="w-24 text-center text-l font-bold">Prodato</Text>
+            <Text className="w-24 text-center text-l font-bold">Cena</Text>
+            <Text className="w-28 text-center text-l font-bold">Ukupno</Text>
+          </View>
 
-              <TextInput
-                className="flex-1 text-center mx-2 border border-gray-400 rounded"
-                keyboardType="numeric"
-                placeholder= "0"
-                value={userInputs[index]?.uneto?.toString() || ""}
-                onChangeText={(value) => handleInputChange(index, "uneto", value === "" ? "0" : value)}
-              />
+          {/* Table Rows */}
+          {piceData.filter((item) => item.type === type).map((item) => {
+            const pocetak = parseFloat(inputValues[item.id_pice]?.pocetak || '0');
+            const uneto = parseFloat(inputValues[item.id_pice]?.uneto || '0');
+            const kraj = calculateSum(inputValues[item.id_pice]?.kraj || '0');
+            const prodato = (uneto + pocetak) - kraj;
+            const ukupno = prodato * parseFloat(item.cena);
+            const prodato_other = (kraj - pocetak);
+            const ukupno_other = prodato_other * parseFloat(item.cena);
 
-              <TouchableOpacity
-                onPress={() => openDialog(index)}
-                className="flex-1 text-center border border-gray-400 rounded h-14 px-2 justify-center items-center"
-              >
-                <Text>
-                  {userInputs[index]?.kraj?.toString() || "0"}
+            // SET VALUES
+
+            return (
+              <View key={item.id_pice} className={`flex-row items-center border-b py-2`}>
+                {/* Naziv */}
+                <Text className="w-32 text-center text-lg">{item.naziv}</Text>
+
+                {/* Početak Input */}
+                {userData?.role === "admin" || userData?.role === "manager" ? (
+                  <TextInput
+                    className="w-24 text-center border border-gray-400 rounded-md px-2 py-2 text-lg bg-gray-100"
+                    keyboardType="number-pad"
+                    placeholder="0"
+                    value={inputValues[item.id_pice]?.pocetak}
+                    onChangeText={(value) => handleInputChange(item.id_pice, "pocetak", value)}
+                    onBlur={() => handleBlur(item, inputValues[item.id_pice]?.pocetak)}
+                  />
+                ) : (
+                  <Text className="w-24 text-center text-lg">{inputValues[item.id_pice]?.pocetak || "0"}</Text>
+                )}
+
+                {/* Uneto Input */}
+                {type === "other" ? (
+                  <Text className="w-24 text-center text-lg">N/A</Text>
+                ) : (
+                  <TextInput
+                    keyboardType="number-pad"
+                    className="w-24 text-center border border-gray-400 rounded-md px-2 py-2 text-lg bg-gray-100"
+                    value={inputValues[item.id_pice]?.uneto}
+                    placeholder="0"
+                    placeholderTextColor="#999"
+                    onChangeText={(value) => handleInputChange(item.id_pice, "uneto", value)}
+                  />
+                )}
+
+                {/* Kraj Input */}
+                <TouchableOpacity
+                  className="w-24 text-center border border-gray-400 rounded-md px-2 py-2 text-lg bg-gray-100 justify-center items-center"
+                  onPress={() => handleDialogPress(item.id_pice)}
+                >
+                  <Text className="text-lg">{calculateSum(inputValues[item.id_pice]?.kraj || '0').toString()}</Text>
+                </TouchableOpacity>
+
+                <DialogModal
+                  visible={modalVisible && currentId === item.id_pice}
+                  onClose={() => setModalVisible(false)}
+                  onConfirm={handleDialogConfirm}
+                  initialValue={inputValues[item.id_pice]?.kraj || ''}
+                />
+                
+                {/* Prodato */}
+                <Text className="w-24 text-center text-lg">
+                  {type === "other" ? Math.max(0, prodato_other).toString() || "0" : Math.max(0, prodato).toString() || "0"}
                 </Text>
-              </TouchableOpacity>
 
-              <Text className="flex-1 text-center">{item.cena} RSD</Text>
-              <Text className="flex-1 text-center">
-                {item.naziv === "Espresso"
-                  ? calculateUkupnoKafa(item, userInputs[index], stavka)
-                  : calculateUkupno(item, userInputs[index], stavka)}{" "}
-                RSD
-              </Text>
+                {/* Cena */}
+                <Text className="w-24 text-center text-lg">{item.cena}</Text>
+
+                {/* Ukupno */}
+                <Text className="w-28 text-center text-lg font-bold">
+                  {type === "other" ? Math.max(0, parseFloat(ukupno_other.toFixed(2))).toString() || "0" : Math.max(0, parseFloat(ukupno.toFixed(2))).toString() || "0"} RSD
+                </Text>
+              </View>
+                );
+              })}
             </View>
           ))}
-        </View>
+
+
         <View className="m-4 mt-2">
           <View className="flex flex-row bg-secondary rounded-t-md pb-1">
             <Text className="flex-1 text-center text-green-600 text-lg font-bold">Prihodi</Text>
-          </View>
+        </View>
 
-          {/* First Row: Kuhinja, KS, Ostali Prihodi, Ostali Prihodi Opis */}
-          <View className="flex flex-row py-2 border-b border-black">
-            <View className="flex-1 px-2">
-              <Text className="text-left pl-1 font-semibold mb-1">Kuhinja</Text>
-              <TextInput
-                className="h-14 border border-gray-400 rounded px-2"
-                keyboardType="number-pad"
-                value={additionalInputs.kuhinja}
-                onChangeText={(value: string) =>
-                  setAdditionalInputs((prev) => ({ ...prev, kuhinja: value }))
-                }
-                placeholder="Unesi kuhinju..."
-              />
-            </View>
-            <View className="flex-1 px-2">
-              <Text className="text-left pl-1 font-semibold mb-1">Kuhinja Storno</Text>
-              <TextInput
-                className="h-14 border border-gray-400 rounded px-2"
-                keyboardType="number-pad"
-                value={additionalInputs.ks}
-                onChangeText={(value: string) =>
-                  setAdditionalInputs((prev) => ({ ...prev, ks: value }))
-                }
-                placeholder="Unesi KS..."
-              />
-            </View>
+        {/* First Row: Kuhinja, KS, Ostali Prihodi, Ostali Prihodi Opis */}
+        <View className="flex flex-row py-2 border-b border-black">
+          <View className="flex-1 px-2">
+            <Text className="text-left pl-1 font-semibold mb-1">Kuhinja</Text>
+            <TextInput
+              className="h-14 border border-gray-400 rounded px-2"
+              keyboardType="number-pad"
+              value={PTInptus.kuhinja}
+              onChangeText={(value: string) =>
+                setPTInptus((prev) => ({ ...prev, kuhinja: value }))
+              }
+              placeholder="Unesi kuhinju..."
+            />
           </View>
+          <View className="flex-1 px-2">
+            <Text className="text-left pl-1 font-semibold mb-1">Kuhinja Storno</Text>
+            <TextInput
+              className="h-14 border border-gray-400 rounded px-2"
+              keyboardType="number-pad"
+              value={PTInptus.ks}
+              onChangeText={(value: string) =>
+                setPTInptus((prev) => ({ ...prev, ks: value }))
+              }
+              placeholder="Unesi KS..."
+            />
+          </View>
+        </View>
 
-          <View className="flex flex-row py-2 border-b border-black">
-            <View className="w-1/3 px-2">
-              <Text className="text-left pl-1 font-semibold mb-1">Ostali Prihodi</Text>
-              <TextInput
-                className="h-14 border border-gray-400 rounded px-2"
-                keyboardType="number-pad"
-                value={additionalInputs.ostalop}
-                onChangeText={(value: string) =>
-                  setAdditionalInputs((prev) => ({ ...prev, ostalop: value }))
-                }
-                placeholder="Unesi ostale prihode..."
-              />
-            </View>
-            <View className="w-2/3 px-2">
-              <Text className="text-left pl-1 font-semibold mb-1">Ostali Prihodi Opis</Text>
-              <TextInput
-                className="h-14 border border-gray-400 rounded px-2"
-                value={additionalInputs.ostalopOpis}
-                onChangeText={(value: string) =>
-                  setAdditionalInputs((prev) => ({ ...prev, ostalopOpis: value }))
-                }
-                placeholder="Unesi opis..."
-              />
-            </View>
+        <View className="flex flex-row py-2 border-b border-black">
+          <View className="w-1/3 px-2">
+            <Text className="text-left pl-1 font-semibold mb-1">Ostali Prihodi</Text>
+            <TouchableOpacity className='h-14 border border-gray-400 rounded px-2 justify-center items-start' onPress={handleOpenDialogPrihodi}>
+            <Text className={PTInptus.ostalop === "" ? "text-gray-400" : "text-black"}>
+              {PTInptus.ostalop === "" 
+                ? "Unesi prihode..." 
+                : PTInptus.ostalop.split('+')
+                    .map(num => parseInt(num, 10))
+                    .reduce((sum, num) => sum + num, 0)
+                    .toString()
+              }
+            </Text>
+            </TouchableOpacity>
+            <PTDialogModal
+              initialValue={PTInptus.ostalop}
+              onConfirm={handleChangePrihodi}
+              onClose={handleCloseDialogPrihodi}
+              isVisible={isDialogVisiblePrihodi}
+            />
           </View>
+          <View className="w-2/3 px-2">
+            <Text className="text-left pl-1 font-semibold mb-1">Ostali Prihodi Opis</Text>
+            <TextInput
+              className="h-14 border border-gray-400 rounded px-2"
+              value={PTInptus.ostalopOpis}
+              onChangeText={(value: string) =>
+                setPTInptus((prev) => ({ ...prev, ostalopOpis: value }))
+              }
+              placeholder="Unesi opis..."
+            />
+          </View>
+        </View>
           
-          <View className="flex flex-row bg-secondary rounded-t-md pb-1 mt-4">
-            <Text className="flex-1 text-center text-red-600 text-lg font-bold">Troškovi</Text>
-          </View>
+        <View className="flex flex-row bg-secondary rounded-t-md pb-1 mt-4">
+          <Text className="flex-1 text-center text-red-600 text-lg font-bold">Troškovi</Text>
+        </View>
 
-          <View className="flex flex-row py-2 border-b border-black">
-            <View className="flex-1 px-2">
-              <Text className="text-left pl-1 font-semibold mb-1">Wolt</Text>
-              <TextInput
-                className="h-14 border border-gray-400 rounded px-2"
-                keyboardType="number-pad"
-                value={additionalInputs.wolt}
-                onChangeText={(value: string) => 
-                  setAdditionalInputs(prev => ({ ...prev, wolt: value }))
-                }
-                placeholder="Unesi wolt..."
-              />
-            </View>
-            <View className="flex-1 px-2">
-              <Text className="text-left pl-1 font-semibold mb-1">Glovo</Text>
-              <TextInput
-                className="h-14 border border-gray-400 rounded px-2"
-                keyboardType="number-pad"
-                value={additionalInputs.glovo}
-                onChangeText={(value: string) => 
-                  setAdditionalInputs(prev => ({ ...prev, glovo: value }))
-                }
-                placeholder="Unesi glovo..."
-              />
-            </View>
+        <View className="flex flex-row py-2 border-b border-black">
+          <View className="flex-1 px-2">
+            <Text className="text-left pl-1 font-semibold mb-1">Wolt</Text>
+            <TextInput
+              className="h-14 border border-gray-400 rounded px-2"
+              keyboardType="number-pad"
+              value={PTInptus.wolt}
+              onChangeText={(value: string) => 
+                setPTInptus(prev => ({ ...prev, wolt: value }))
+              }
+              placeholder="Unesi wolt..."
+            />
           </View>
+          <View className="flex-1 px-2">
+            <Text className="text-left pl-1 font-semibold mb-1">Glovo</Text>
+            <TextInput
+              className="h-14 border border-gray-400 rounded px-2"
+              keyboardType="number-pad"
+              value={PTInptus.glovo}
+              onChangeText={(value: string) => 
+                setPTInptus(prev => ({ ...prev, glovo: value }))
+              }
+              placeholder="Unesi glovo..."
+            />
+          </View>
+        </View>
 
-          <View className="flex flex-row py-2 border-b border-black">
-            <View className="flex-1 px-2">
-              <Text className="text-left pl-1 font-semibold mb-1">Sale</Text>
-              <TextInput
-                className="h-14 border border-gray-400 rounded px-2"
-                keyboardType="number-pad"
-                value={additionalInputs.sale}
-                onChangeText={(value: string) => 
-                  setAdditionalInputs(prev => ({ ...prev, sale: value }))
-                }
-                placeholder="Unesi sale..."
-              />
-            </View>
-            <View className="flex-1 px-2">
-              <Text className="text-left pl-1 font-semibold mb-1">Kartice</Text>
-              <TextInput
-                className="h-14 border border-gray-400 rounded px-2"
-                keyboardType="number-pad"
-                value={additionalInputs.kartice}
-                onChangeText={(value: string) =>
-                  setAdditionalInputs((prev) => ({ ...prev, kartice: value }))
-                }
-                placeholder="Unesi kartice..."
-              />
-            </View>
+        <View className="flex flex-row py-2 border-b border-black">
+          <View className="flex-1 px-2">
+            <Text className="text-left pl-1 font-semibold mb-1">Sale</Text>
+            <TextInput
+              className="h-14 border border-gray-400 rounded px-2"
+              keyboardType="number-pad"
+              value={PTInptus.sale}
+              onChangeText={(value: string) => 
+                setPTInptus(prev => ({ ...prev, sale: value }))
+              }
+              placeholder="Unesi sale..."
+            />
           </View>
+          <View className="flex-1 px-2">
+            <Text className="text-left pl-1 font-semibold mb-1">Kartice</Text>
+            <TextInput
+              className="h-14 border border-gray-400 rounded px-2"
+              keyboardType="number-pad"
+              value={PTInptus.kartice}
+              onChangeText={(value: string) =>
+                setPTInptus((prev) => ({ ...prev, kartice: value }))
+              }
+              placeholder="Unesi kartice..."
+            />
+          </View>
+        </View>
 
           {/* Fourth Row: Ostalo and Ostalo Opis */}
-          <View className="flex flex-row py-2 border-b border-black">
-            <View className="w-1/3 px-2">
-              <Text className="text-left pl-1 font-semibold mb-1">Ostali Troškovi</Text>
-              <TextInput
-                className="h-14 border border-gray-400 rounded px-2"
-                keyboardType="number-pad"
-                value={additionalInputs.ostalot}
-                onChangeText={(value: string) => 
-                  setAdditionalInputs(prev => ({ ...prev, ostalot: value }))
-                }
-                placeholder="Unesi ostale troškove..."
-              />
-            </View>
-            <View className="w-2/3 px-2">
-              <Text className="text-left pl-1 font-semibold mb-1">Ostali Troškovi Opis</Text>
-              <TextInput
-                className="h-14 border border-gray-400 rounded px-2"
-                value={additionalInputs.ostalotOpis}
-                onChangeText={(value: string) => 
-                  setAdditionalInputs(prev => ({ ...prev, ostalotOpis: value }))
-                }
-                placeholder="Unesi opis..."
-              />
-            </View>
+        <View className="flex flex-row py-2 border-b border-black">
+          <View className="w-1/3 px-2">
+            <Text className="text-left pl-1 font-semibold mb-1">Ostali Troškovi</Text>
+            <TouchableOpacity className='h-14 border border-gray-400 rounded px-2 justify-center items-start' onPress={handleOpenDialogTroskovi}>
+            <Text className={PTInptus.ostalot === "" ? "text-gray-400" : "text-black"}>
+              {PTInptus.ostalot === "" 
+                ? "Unesi troškove..." 
+                : PTInptus.ostalot.split('+')
+                    .map(num => parseInt(num, 10))
+                    .reduce((sum, num) => sum + num, 0)
+                    .toString()
+              }
+            </Text>
+            </TouchableOpacity>
+            <PTDialogModal
+              initialValue={PTInptus.ostalot}
+              onConfirm={handleChangeTroskovi}
+              onClose={handleCloseDialogTroskovi}
+              isVisible={isDialogVisibleTroskovi}
+            />
           </View>
+          <View className="w-2/3 px-2">
+            <Text className="text-left pl-1 font-semibold mb-1">Ostali Troškovi Opis</Text>
+            <TextInput
+              className="h-14 border border-gray-400 rounded px-2"
+              value={PTInptus.ostalotOpis}
+              onChangeText={(value: string) => 
+                setPTInptus(prev => ({ ...prev, ostalotOpis: value }))
+              }
+              placeholder="Unesi opis..."
+            />
+          </View>
+        </View>
 
           {/* Fifth Row: Virman and Virman Opis */}
-          <View className="flex flex-row py-2 border-b border-black">
-            <View className="w-1/3 px-2">
-              <Text className="text-left pl-1 font-semibold mb-1">Virman</Text>
-              <TextInput
-                className="h-14 border border-gray-400 rounded px-2"
-                keyboardType="number-pad"
-                value={additionalInputs.virman}
-                onChangeText={(value: string) => 
-                  setAdditionalInputs(prev => ({ ...prev, virman: value }))
-                }
-                placeholder="Unesi virman..."
-              />
-            </View>
-            <View className="w-2/3 px-2">
-              <Text className="text-left pl-1 font-semibold mb-1">Virman Opis</Text>
-              <TextInput
-                className="h-14 border border-gray-400 rounded px-2"
-                value={additionalInputs.virmanOpis}
-                onChangeText={(value: string) => 
-                  setAdditionalInputs(prev => ({ ...prev, virmanOpis: value }))
-                }
-                placeholder="Unesi opis..."
-              />
-            </View>
-          </View>
-        </View>
-
-        <View className="m-4 mt-2 bg-primary rounded-lg p-4">
-        <View className="mb-4 flex-row items-center justify-between">
-          <TouchableOpacity 
-            className="w-7/12 bg-orange py-4 rounded-lg"
-            onPress={popisConfirm}
-            
-          >
-            <Text className="text-black text-center text-lg font-bold">
-              Završi Popis
+        <View className="flex flex-row py-2 border-b border-black">
+          <View className="w-1/3 px-2">
+            <Text className="text-left pl-1 font-semibold mb-1">Virman</Text>
+            <TouchableOpacity className='h-14 border border-gray-400 rounded px-2 justify-center items-start' onPress={handleOpenDialogVirman}>
+            <Text className={PTInptus.virman === "" ? "text-gray-400" : "text-black"}>
+              {PTInptus.virman === "" 
+                ? "Unesi virmane..." 
+                : PTInptus.virman.split('+')
+                    .map(num => parseInt(num, 10))
+                    .reduce((sum, num) => sum + num, 0)
+                    .toString()
+              }
             </Text>
-          </TouchableOpacity>
-            <View className="w-2/6  bg-white rounded-lg border border-gray-300">
-              <Picker
-                selectedValue={additionalInputs.smena}
-                onValueChange={(itemValue) =>
-                  setAdditionalInputs(prev => ({ ...prev, smena: itemValue }))
-                }
-                className="h-12"
-              >
-                <Picker.Item label= "[Smena]" value=""/>
-                <Picker.Item label="Prva smena" value="prva" enabled={isBefore16h} />
-                <Picker.Item label="Druga smena" value="druga" enabled={isAfter16h} />
-              </Picker>
-            </View>
-        </View>
-          <View className="space-y-4">
-            {/* Pazar Row */}
-            <View className="flex flex-row justify-between items-center border-b border-gray-300 pb-2">
-              <Text className="text-lg font-bold">Piće:</Text>
-              <Text className="text-lg">
-                {calculatePazar(data, userInputs, stavka).toLocaleString()} RSD
-              </Text>
-            </View>
-            
-            {/* Prihodi Row */}
-            <View className="flex flex-row justify-between items-center border-b border-gray-300 pb-2">
-              <Text className="text-lg font-bold">Prihodi:</Text>
-              <Text className="text-lg">
-                {calculatePrihodi(additionalInputs).toLocaleString()} RSD
-              </Text>
-            </View>
-            
-            {/* Troškovi Row */}
-            <View className="flex flex-row justify-between items-center border-b border-gray-300 pb-2">
-              <Text className="text-lg font-bold">Troškovi:</Text>
-              <Text className="text-lg">
-                - {calculateTroskovi(additionalInputs).toLocaleString()} RSD
-              </Text>
-            </View>
-            
-            {/* Ukupno Row */}
-            <View className="flex flex-row justify-between items-center pt-2">
-              <Text className="text-xl font-bold">Ukupno:</Text>
-              <Text className="text-xl font-bold text-secondary">
-                {Number(additionalInputs.ukupnoAll).toLocaleString()} RSD
-              </Text>
-            </View>
+            </TouchableOpacity>
+            <PTDialogModal
+              initialValue={PTInptus.virman}
+              onConfirm={handleChangeVirman}
+              onClose={handleCloseDialogVirman}
+              isVisible={isDialogVisibleVirman}
+            />
+          </View>
+          <View className="w-2/3 px-2">
+            <Text className="text-left pl-1 font-semibold mb-1">Virman Opis</Text>
+            <TextInput
+              className="h-14 border border-gray-400 rounded px-2"
+              value={PTInptus.virmanOpis}
+              onChangeText={(value: string) => 
+                setPTInptus(prev => ({ ...prev, virmanOpis: value }))
+              }
+              placeholder="Unesi opis..."
+            />
           </View>
         </View>
-      </ScrollView>
+      </View>
+
+      <View className="m-4 mt-2 bg-primary rounded-lg p-4">
+      <View className="mb-4 flex-row items-center justify-between">
+        <TouchableOpacity 
+          className="w-7/12 bg-orange py-4 rounded-lg"
+          onPress={popisConfirm}
+        >
+          <Text className="text-black text-center text-lg font-bold">
+            Završi Popis
+          </Text>
+        </TouchableOpacity>
+          <View className="w-2/6  bg-white rounded-lg border border-gray-300">
+            <Picker
+              selectedValue={otherInputs.smena}
+              onValueChange={(itemValue) =>
+                setOtherInputs(prev => ({ ...prev, smena: itemValue }))
+              }
+              className="h-12"
+            >
+              <Picker.Item label= "[Smena]" value=""/>
+              {/* enabled={isBefore16h} enabled={isAfter16h} */}
+              <Picker.Item label="Prva smena" value="prva"  style={{ color: isBefore16h ? 'black' : 'gray' }}/> 
+              <Picker.Item label="Druga smena" value="druga"  style={{ color: isAfter16h ? 'black' : 'gray' }} />
+            </Picker>
+          </View>
+      </View>
+        <View className="space-y-4">
+          {/* Pazar Row */}
+          <View className="flex flex-row justify-between items-center border-b border-gray-300 pb-2">
+            <Text className="text-lg font-bold">Piće:</Text>
+            <Text className="text-lg">
+            {Math.max(0, parseFloat(calculateTotalSum().toFixed(2))).toString()} RSD
+            </Text>
+          </View>
+          
+          {/* Prihodi Row */}
+          <View className="flex flex-row justify-between items-center border-b border-gray-300 pb-2">
+            <Text className="text-lg font-bold">Prihodi:</Text>
+            <Text className="text-lg">
+              {((
+                parseInt(PTInptus.kuhinja || "0") + 
+                parseInt(PTInptus.ks || "0") + 
+                parseInt(evaluateExpression(PTInptus.ostalop) || "0")
+              ).toFixed(2))} RSD
+            </Text>
+          </View>
+          
+          {/* Troškovi Row */}
+          <View className="flex flex-row justify-between items-center border-b border-gray-300 pb-2">
+            <Text className="text-lg font-bold">Troškovi:</Text>
+            <Text className="text-lg">
+              - {((
+                parseInt(PTInptus.wolt || "0") + 
+                parseInt(PTInptus.glovo || "0") + 
+                parseInt(PTInptus.sale || "0") + 
+                parseInt(PTInptus.kartice || "0") + 
+                parseInt( evaluateExpression(PTInptus.ostalot) || "0") + 
+                parseInt( evaluateExpression(PTInptus.virman) || "0")
+                ).toFixed(2))} RSD
+            </Text>
+          </View>
+          
+          {/* Ukupno Row */}
+          <View className="flex flex-row justify-between items-center pt-2">
+            <Text className="text-xl font-bold">Ukupno:</Text>
+            <Text className="text-xl font-bold text-secondary">
+              {(
+                Math.max(
+                  0, // Ensure the result is never less than 0
+                  calculateTotalSum() + 
+                  (parseInt(PTInptus.kuhinja || "0") + 
+                  parseInt(PTInptus.ks || "0") + 
+                  parseInt(evaluateExpression(PTInptus.ostalop) || "0")) - 
+                  (parseInt(PTInptus.wolt || "0") + 
+                  parseInt(PTInptus.glovo || "0") + 
+                  parseInt(PTInptus.sale || "0") + 
+                  parseInt(PTInptus.kartice || "0") + 
+                  parseInt(evaluateExpression(PTInptus.ostalot)|| "0") + 
+                  parseInt(evaluateExpression(PTInptus.virman) || "0"))
+                ).toFixed(2)
+              ).toString()} RSD
+            </Text>
+          </View>
+        </View>
+      </View>
+    </ScrollView>
 
       {/* Dialog Modal */}
-      <DialogModal
-        visible={isDialogVisible}
-        value={dialogValue}
-        onChangeText={setDialogValue}
-        onConfirm={handleDialogConfirm}
-        onCancel={() => setIsDialogVisible(false)}
-        onAddPlus={handleAddPlus}
-      />
-    </SafeAreaView>
+
+  </SafeAreaView>
   );
 };
 

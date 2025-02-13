@@ -17,6 +17,10 @@ const addRadnik = () => {
     return /^[a-zA-ZćčžšđĆČŽŠĐ!@#$%^&*(),.?":{}|<>_\-+=~`[\]\\]*$/.test(value);
   }; 
   const handleTypes = async () => {
+    if(ime === "Aleksandar" && prezime === "Milenković"){
+      Alert.alert("Delete Error", "Ovo Ime i Prezime je rezervisano za glavnog admina.")
+      return
+    }
     if(ime == null || typeof ime !== "string" || ime == '' || prezime == null || typeof prezime !== "string" || prezime == '' || sifra == null || typeof sifra !== "string" || sifra == '' || !isLettersAndSymbols(ime) || !isLettersAndSymbols(prezime)){
       Alert.alert(
         "Error",
@@ -50,6 +54,7 @@ const addRadnik = () => {
   const clearInputs = async () => {
     setIme("");
     setPrezime("");
+    setSifra("");
   }
 
   return (
@@ -74,6 +79,7 @@ const addRadnik = () => {
             <TextInput
               placeholder='Šifra'
               value={sifra}
+              keyboardType="number-pad"
               onChangeText={(text) => setSifra(text)}
               className='w-3/4 mt-2 border border-gray-300 bg-white rounded-md p-3 text-gray-700'
             />
@@ -86,6 +92,7 @@ const addRadnik = () => {
                   dropdownIconColor="#6B7280"
                 >
                   <Picker.Item label="Admin" value="admin" />
+                  <Picker.Item label="Menadžer" value="manager" />
                   <Picker.Item label="Radnik" value="user" />
                 </Picker>
               </View>

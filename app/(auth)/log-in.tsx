@@ -34,10 +34,6 @@ const LogIn = () => {
   }, [])
   );
 
-  const bypass = async () => {
-    router.replace('/(tabs)/popis');
-  }
-
   const imageOpacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -87,7 +83,7 @@ const LogIn = () => {
 
   return (
     <SafeAreaView className="bg-primary h-full flex">
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+      <ScrollView keyboardShouldPersistTaps='handled' contentContainerStyle={{ flexGrow: 1 }}>
         <View className="w-full justify-center items-center min-h-[54vh] px-4 my-6 flex-1">
           <Animated.Image 
             source={require('../../assets/images/person_icon.png')}

@@ -1,108 +1,162 @@
-import React, { useState } from "react";
-import {
-  Modal,
-  View,
-  Text,
-  TextInput,
-  Button,
-  StyleSheet,
-} from "react-native";
+import React, { useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, Modal, StyleSheet, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard, ScrollView } from 'react-native';
+
 
 interface DialogModalProps {
   visible: boolean;
-  value: string;
-  onChangeText: (value: string) => void;
-  onConfirm: () => void;
-  onCancel: () => void;
-  onAddPlus: () => void;
+  onClose: () => void;
+  onConfirm: (value: string) => void;
+  initialValue: string;
 }
 
-const DialogModal: React.FC<DialogModalProps> = ({
-  visible,
-  value,
-  onChangeText,
-  onConfirm,
-  onCancel,
-  onAddPlus,
-}) => {
+const DialogModal: React.FC<DialogModalProps> = ({ visible, onClose, onConfirm, initialValue }) => {
+  const [input, setInput] = useState<string>(initialValue || '');
 
-  const handleSubmit = () => {
-    if (!value || !value.trim()) {
-      onChangeText("0");
-    } else {
-      onConfirm()
+  const handleAdd = () => {
+    setInput((prev) => `${prev}+`);
+  };
+
+  const handleConfirm = () => {
+    if (validateInput(input)) {
+      onConfirm(input);
+      onClose();
     }
   };
 
-  const handleCancel = () => {
-    if (!value || !value.trim()) {
-      onChangeText("0");
+  const validateInput = (value: string): boolean => {
+    const regex = /^\d+(?:\+\d+)*$/;
+    return regex.test(value);
+  };
+
+  const evaluateExpression = (expr: string): string => {
+    try {
+      if (validateInput(expr)) {
+        return expr
+          .split('+')
+          .map(num => parseInt(num, 10))
+          .reduce((sum, num) => sum + num, 0)
+          .toString();
+      }
+      return expr;
+    } catch {
+      return expr;
     }
-    onCancel();
   };
 
   return (
-    <Modal visible={visible} transparent={true} animationType="slide">
-      <View style={styles.modalBackground}>
-        <View style={styles.dialogContainer}>
-          <Text style={styles.title}>Unesite vrednosti</Text>
-          <TextInput
-            style={styles.input}
-            value={value}
-            onChangeText={onChangeText}
-            placeholder=""
-            keyboardType="number-pad"
-          />
-        <View style={styles.addButtonContainer}>
+    <Modal visible={visible} transparent animationType="fade">
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+        <View style={styles.modalContainer}>
+          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.modalContent}>
+            <Text style={styles.title}>UNESITE VREDNOSTI</Text>
+
+            <Text style={styles.evaluatedText}>
+            Vrednost: {evaluateExpression(input)}
+            </Text>
+
+            <TextInput
+              style={styles.input}
+              value={input}
+              onChangeText={setInput}
+              keyboardType="number-pad"
+              placeholder="Unesite broj..."
+              autoFocus
+            />
+
+            <View style={styles.inlineButtons}>
+              <TouchableOpacity style={styles.addButton} onPress={handleAdd} activeOpacity={0.7}>
+                <Text style={styles.addButtonText}>+</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity style={[styles.button, styles.confirmButton]} onPress={handleConfirm} activeOpacity={0.7}>
+                <Text style={styles.buttonText}>Potvrdi</Text>
+              </TouchableOpacity>
+            </View>
+          </KeyboardAvoidingView>
         </View>
-          <View style={styles.buttonContainer}>
-            <Button title="OK" onPress={handleSubmit} />
-            <Button title="[  +  ]" onPress={onAddPlus}/>
-            <Button title="Cancel" onPress={handleCancel} />
-          </View>
-        </View>
-      </View>
+      </TouchableWithoutFeedback>
     </Modal>
   );
 };
 
 const styles = StyleSheet.create({
-  modalBackground: {
+  modalContainer: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
-  dialogContainer: {
-    width: 300,
-    backgroundColor: "white",
+  modalContent: {
+    width: '85%',
     padding: 20,
-    borderRadius: 10,
-    alignItems: "center",
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 8,
+    elevation: 5,
   },
   title: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginBottom: 10,
-    textAlign: "center",
+    fontSize: 18,
+    fontWeight: '600',
+    textAlign: 'center',
+    marginBottom: 15,
   },
+  evaluatedText: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 10,
+},
   input: {
-    width: "100%",
     borderWidth: 1,
-    borderColor: "gray",
-    borderRadius: 5,
+    borderColor: '#393B44',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    marginBottom: 10,
+  },
+  inlineButtons: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginBottom: 15,
+  },
+  addButton: {
+    backgroundColor: '#FFA001',
     padding: 10,
-    marginBottom: 20,
-    textAlign: "center",
+    paddingHorizontal: 20,
+    borderRadius: 6,
+    borderWidth: 1,
+  },
+  addButtonText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#fff',
   },
   buttonContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: "100%",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
   },
-  addButtonContainer: {
-    marginBottom: 10,
-    alignSelf: "center",
+  button: {
+    flex: 1,
+    padding: 12,
+    borderRadius: 6,
+    borderWidth: 1,
+    alignItems: 'center',
+    marginHorizontal: 5,
+  },
+  cancelButton: {
+    backgroundColor: '#ef4444',
+  },
+  confirmButton: {
+    backgroundColor: '#4CAF50',
+  },
+  buttonText: {
+    fontSize: 16,
+    color: '#fff',
+    fontWeight: '600',
   },
 });
 

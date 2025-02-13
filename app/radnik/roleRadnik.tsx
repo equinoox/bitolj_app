@@ -37,7 +37,11 @@ const roleRadnik = () => {
     }, [selectedRow]);
 
     const handleTypes = async () => {
-        if(role == 'admin' || role == 'user'){
+        if(selectedRow?.ime === "Aleksandar" && selectedRow?.prezime === "Milenković"){
+            Alert.alert("Delete Error", "Ne možete promeniti poziciju ovog admina.")
+            return
+          }
+        if(role === "admin" || role === "manager" || role === "user"){
             Alert.alert(
                 "Update Confirmation",
                 "Da li želite da promenite poziciju Radnika?",
@@ -68,46 +72,62 @@ const roleRadnik = () => {
             }
       }
 
-  return (
-    <SafeAreaView className='h-full flex bg-primary'>
-        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-            <View className="mt-4 px-4">
-                <View className="flex-row justify-between border-b-2 border-black pb-2 mb-2">
-                  <View className="flex-row flex-[2]">
-                    <Text className="text-lg font-bold mr-4">Ime - Prezime</Text>
-                  </View>
-                  <Text className="text-lg font-bold flex-1 text-right">Pozicija</Text>
-                </View>
-                {data.map((item) => (
-                    <TouchableOpacity
-                        key={item.id_korisnik}
-                        className={`flex-row justify-between border-b border-gray-300 py-2 ${
-                        selectedRow?.id_korisnik === item.id_korisnik ? "bg-orange" : ""
-                        }`}
-                        onPress={() => setSelectedRow(item)}
-                    >
-                      <View className="flex-row flex-[2]">
-                        <Text className="mr-4">{item.ime}</Text>
-                        <Text>{item.prezime}</Text>
-                      </View>
-                      <Text className="flex-1 text-right">
-                      {item.role === "admin" ? "Admin" : item.role === "user" ? "Radnik" : item.role}
-                      </Text>
-                    </TouchableOpacity>
-                   ))}
-                  {selectedRow && (
-                    <View className="mt-4">
-                        <Text className="text-lg font-semibold">
-                            Izabrani Radnik: {selectedRow.ime} - {selectedRow.prezime} - {selectedRow.role === "admin" ? "Admin" : selectedRow.role === "user" ? "Radnik" : selectedRow.role}
-                        </Text>
-                        <View className='w-full flex-row justify-center mt-3'>
-                            <TouchableOpacity 
-                            className='mt-4 bg-orange mx-2 items-center w-1/3 rounded-md py-4 px-4'
-                            onPress={async () => handleTypes()}
-                            >
-                                <Text>Promeni Poziciju</Text>
-                            </TouchableOpacity>   
-                            <View className="w-52 bg-white border border-gray-300 rounded-lg overflow-hidden shadow-md ml-2 mt-3">
+      return (
+        <SafeAreaView className='h-full flex bg-primary'>
+            <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+                <View className="mt-4 px-6 mx-auto w-full max-w-2xl">
+                    {/* Table Header */}
+                    <View className="flex-row justify-between items-center border-b-2 border-black pb-3 mb-4">
+                        <View className="flex-row flex-[2]">
+                            <Text className="text-lg font-bold">Ime - Prezime</Text>
+                        </View>
+                        <View className="flex-1">
+                            <Text className="text-lg font-bold text-center">Pozicija</Text>
+                        </View>
+                    </View>
+    
+                    {/* Table Data */}
+                    {data.map((item) => (
+                        <TouchableOpacity
+                            key={item.id_korisnik}
+                            className={`flex-row justify-between items-center border-b border-gray-300 py-3 ${
+                                selectedRow?.id_korisnik === item.id_korisnik ? "bg-orange" : ""
+                            }`}
+                            onPress={() => setSelectedRow(item)}
+                        >
+                            <View className="flex-row flex-[2]">
+                                <Text className="text-base">{item.ime}</Text>
+                                <Text className="text-base ml-2">{item.prezime}</Text>
+                            </View>
+                            <View className="flex-1">
+                                <Text className="text-base text-center">
+                                    {item.role === "admin" ? "Admin" : 
+                                    item.role === "user" ? "Radnik" : 
+                                    item.role === "manager" ? "Menadžer" : 
+                                    item.role}
+                                </Text>
+                            </View>
+                        </TouchableOpacity>
+                    ))}
+    
+                    {/* Selected Row Information */}
+                    {selectedRow && (
+                        <View className="mt-6 w-full">
+                            <Text className="text-lg font-semibold text-center">
+                                Izabrani Radnik: {selectedRow.ime} {selectedRow.prezime}
+                            </Text>
+                            
+                            {/* Action Buttons */}
+                            <View className='w-full flex-row justify-center mt-4'>
+                                <TouchableOpacity 
+                                    className='bg-orange mx-2 items-center w-1/3 rounded-md py-4'
+                                    onPress={handleTypes}
+                                >
+                                    <Text>Izmeni</Text>
+                                </TouchableOpacity>
+                            </View>
+                            <View className='mt-4 justify-center items-center'>
+                            <View className="w-1/2 bg-white border border-gray-300 rounded-lg overflow-hidden shadow-md ml-2 mt-3">
                                 <Picker
                                     selectedValue={role}
                                     onValueChange={(itemValue) => setRole(itemValue)}
@@ -115,16 +135,17 @@ const roleRadnik = () => {
                                     dropdownIconColor="#6B7280"
                                 >
                                     <Picker.Item label="Admin" value="admin" />
+                                    <Picker.Item label="Menadžer" value="manager" />
                                     <Picker.Item label="Radnik" value="user" />
                                 </Picker>
                            </View>
+                            </View>
                         </View>
-                    </View>
-                  )}
+                    )}
                 </View>
-        </ScrollView>
-    </SafeAreaView>
-  )
+            </ScrollView>
+        </SafeAreaView>
+      )
 }
 
 export default roleRadnik
