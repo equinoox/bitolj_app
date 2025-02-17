@@ -98,7 +98,7 @@ const AddPice = () => {
             >
               <Picker.Item label="Komadno" value="piece" />
               <Picker.Item label="Mililitarsko" value="liters" />
-              <Picker.Item label="Miligramsko" value="kilograms" />
+              <Picker.Item label="Gramsko" value="kilograms" />
               <Picker.Item label="Ostalo" value="other" />
             </Picker>
           </View>

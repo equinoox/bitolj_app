@@ -51,7 +51,7 @@ const listaPice = () => {
                             <Text className="flex-1 text-center">
                                 {item.type === 'piece' && 'Komad'}
                                 {item.type === 'liters' && 'Mililitar'}
-                                {item.type === 'kilograms' && 'Miligram'}
+                                {item.type === 'kilograms' && 'Gram'}
                                 {item.type === 'other' && 'Ostalo'}
                             </Text>
                         </TouchableOpacity>

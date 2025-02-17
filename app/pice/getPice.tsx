@@ -142,7 +142,7 @@ const getPice = () => {
                             <Text className="flex-1 text-center">
                                 {item.type === 'piece' && 'Komad'}
                                 {item.type === 'liters' && 'Mililitar'}
-                                {item.type === 'kilograms' && 'Miligram'}
+                                {item.type === 'kilograms' && 'Gram'}
                                 {item.type === 'other' && 'Ostalo'}
                             </Text>
                         </TouchableOpacity>
@@ -210,7 +210,7 @@ const getPice = () => {
                                         >
                                             <Picker.Item label="Komadno" value="piece" />
                                             <Picker.Item label="Mililitarsko" value="liters" />
-                                            <Picker.Item label="Miligramsko" value="kilograms" />
+                                            <Picker.Item label="Gramsko" value="kilograms" />
                                             <Picker.Item label="Ostalo" value="other" />
                                         </Picker>
                                     </View>

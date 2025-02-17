@@ -2,7 +2,7 @@
   "expo": {
     "name": "Bitolj Popis",
     "slug": "bitolj_popis",
-    "version": "1.1.4",
+    "version": "1.1.5",
     "orientation": "portrait",
     "icon": "./assets/images/icon.jpg",
     "scheme": "bitoljapp",
@@ -13,7 +13,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/android_icon.png",
+        "foregroundImage": "./assets/images/android_app_icon.png",
         "backgroundColor": "#ffffff"
       },
       "package": "com.lazarpav.bitolj_popis"

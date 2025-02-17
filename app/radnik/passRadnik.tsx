@@ -27,10 +27,6 @@ const passRadnik = () => {
     );
 
     const handleTypes = async () => {
-        if(selectedRow?.ime === "Aleksandar" && selectedRow?.prezime === "Milenković"){
-            Alert.alert("Delete Error", "Ne možete promeniti šifru ovog admina.")
-            return
-          }
         if(sifra !== cSifra || sifra === "" || cSifra === ""){
           Alert.alert(
             "Error",

@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, TextInput, TouchableOpacity, Alert, BackHandler } from 'react-native'
+import { View, Text, ScrollView, TextInput, TouchableOpacity, Alert } from 'react-native'
 import { router } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
 import { useState, useCallback, useEffect } from 'react'
@@ -11,6 +11,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import DialogModal from '@/components/DialogModal';
 import React from 'react'
 import PTDialogModal from '@/components/PTDialogModal';
+import * as BackgroundFetch from 'expo-background-fetch';
+import * as TaskManager from 'expo-task-manager';
 
 const Popis = () => {
 
@@ -61,7 +63,32 @@ const Popis = () => {
   
   const [hour, minute] = serbianTimeString.split(":").map(Number);
   const isAfter16h = hour > 16 || (hour === 16 && minute >= 0);
-  const isBefore16h = !isAfter16h; 
+  const isBefore16h = !isAfter16h;
+  const today = new Date().toISOString().split('T')[0];
+
+  const [prvaSmenaEnabled, setPrvaSmenaEnabled] = useState(false)
+  const [drugaSmenaEnabled, setDrugaSmenaEnabled] = useState(false)
+
+  const checkForPrvaSmena = async (date: string) => {
+    try {
+      const result = await database.getAllAsync(`
+        SELECT * FROM popis 
+        WHERE date(datum) = date(?) 
+        AND smena = ?
+      `, [date, "prva"]);
+      
+      if(result.length > 0){
+        setPrvaSmenaEnabled(false)
+        setDrugaSmenaEnabled(true)
+      } else {
+        setPrvaSmenaEnabled(true)
+        setDrugaSmenaEnabled(false)
+      }
+    } catch (error) {
+      console.error("Error checking smena:", error);
+    }
+  };
+
 
   // ================================================================================================================
   // ================================================================================================================
@@ -128,7 +155,7 @@ const Popis = () => {
   
   const [otherInputs, setOtherInputs] = useState({
     datum: new Date().toLocaleString("en-GB", { timeZone: "Europe/Belgrade" }),
-    smena: '' 
+    smena: ''
   })
   
   const [inputValues, setInputValues] = useState<InputValues>({});
@@ -157,6 +184,7 @@ const Popis = () => {
   useFocusEffect(
     useCallback(() => {
       fetchData()
+      checkForPrvaSmena(today)
     }, [])
     );
 
@@ -716,7 +744,7 @@ const Popis = () => {
           {/* Table Title */}
           <View className="bg-secondary rounded-t-lg p-4">
             <Text className="text-orange text-2xl font-bold text-center">
-              Stavke Popisa [{type === "piece" ? "kom" : type === "liters" ? "ml" : type === "kilograms" ? "mg" : "Ostalo"}]
+              Stavke Popisa [{type === "piece" ? "kom" : type === "liters" ? "ml" : type === "kilograms" ? "g" : "Ostalo"}]
             </Text>
           </View>
 
@@ -765,7 +793,7 @@ const Popis = () => {
                 {/* Uneto Input */}
                 {type === "other" ? (
                   <Text className="w-24 text-center text-lg">N/A</Text>
-                ) : (
+                ) : userData?.role === "admin" || userData?.role === "manager" ? (
                   <TextInput
                     keyboardType="number-pad"
                     className="w-24 text-center border border-gray-400 rounded-md px-2 py-2 text-lg bg-gray-100"
@@ -774,6 +802,10 @@ const Popis = () => {
                     placeholderTextColor="#999"
                     onChangeText={(value) => handleInputChange(item.id_pice, "uneto", value)}
                   />
+                ) : (
+                  <Text className="w-24 text-center text-lg">
+                  {inputValues[item.id_pice]?.uneto || "0"}
+                </Text>
                 )}
 
                 {/* Kraj Input */}
@@ -1024,10 +1056,9 @@ const Popis = () => {
               }
               className="h-12"
             >
-              <Picker.Item label= "[Smena]" value=""/>
-              {/* enabled={isBefore16h} enabled={isAfter16h} */}
-              <Picker.Item label="Prva smena" value="prva" enabled={isBefore16h}  style={{ color: isBefore16h ? 'black' : 'gray' }}/> 
-              <Picker.Item label="Druga smena" value="druga" enabled={isAfter16h}  style={{ color: isAfter16h ? 'black' : 'gray' }} />
+              <Picker.Item label= "[Smena]" enabled={false} value="" style={{ color: 'black' }}/>
+              <Picker.Item label="Prva smena" value="prva" enabled={prvaSmenaEnabled}  style={{ color: prvaSmenaEnabled ? 'black' : 'gray' }}/> 
+              <Picker.Item label="Druga smena" value="druga" enabled={drugaSmenaEnabled}  style={{ color: drugaSmenaEnabled ? 'black' : 'gray' }} />
             </Picker>
           </View>
       </View>
