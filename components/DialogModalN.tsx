@@ -12,8 +12,8 @@ interface DialogModalProps {
 const DialogModal: React.FC<DialogModalProps> = ({ visible, onClose, onConfirm, initialValue }) => {
   const [input, setInput] = useState<string>(initialValue || '');
 
-  const handleAdd = () => {
-    setInput((prev) => `${prev}+`);
+  const handleN = () => {
+    setInput((prev) => `${prev}-`);
   };
 
   const handleConfirm = () => {
@@ -24,24 +24,10 @@ const DialogModal: React.FC<DialogModalProps> = ({ visible, onClose, onConfirm, 
   };
 
   const validateInput = (value: string): boolean => {
-    const regex = /^\d+(?:\+\d+)*$/;
+    const regex = /^-?\d+$/;
     return regex.test(value);
   };
 
-  const evaluateExpression = (expr: string): string => {
-    try {
-      if (validateInput(expr)) {
-        return expr
-          .split('+')
-          .map(num => parseInt(num, 10))
-          .reduce((sum, num) => sum + num, 0)
-          .toString();
-      }
-      return expr;
-    } catch {
-      return expr;
-    }
-  };
 
   return (
     <Modal visible={visible} transparent animationType="fade">
@@ -50,8 +36,9 @@ const DialogModal: React.FC<DialogModalProps> = ({ visible, onClose, onConfirm, 
           <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.modalContent}>
             <Text style={styles.title}>UNESITE VREDNOSTI</Text>
 
-            <Text style={styles.evaluatedText}>
-            Vrednost: {evaluateExpression(input)}
+            <Text style={styles.warningText}>
+                Upozorenje!{"\n"}
+                Negativne vrednosti unosite samo u slučaju nedostatka pića.
             </Text>
 
             <TextInput
@@ -59,13 +46,13 @@ const DialogModal: React.FC<DialogModalProps> = ({ visible, onClose, onConfirm, 
               value={input}
               onChangeText={setInput}
               keyboardType="number-pad"
-              placeholder="Unesite vrednosti..."
+              placeholder="Unesite vrednost..."
               autoFocus
             />
 
             <View style={styles.inlineButtons}>
-              <TouchableOpacity style={styles.addButton} onPress={handleAdd} activeOpacity={0.7}>
-                <Text style={styles.addButtonText}>+</Text>
+              <TouchableOpacity style={styles.addButton} onPress={handleN} activeOpacity={0.7}>
+                <Text style={styles.addButtonText}>-</Text>
               </TouchableOpacity>
             </View>
 
@@ -105,9 +92,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 15,
   },
-  evaluatedText: {
+  warningText: {
     fontSize: 14,
-    color: '#666',
+    color: '#ef4444',
     marginBottom: 10,
     textAlign: 'center',
 },

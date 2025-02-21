@@ -9,10 +9,10 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { FontAwesome5, MaterialIcons, AntDesign } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import DialogModal from '@/components/DialogModal';
-import React from 'react'
+import DialogModalN from '@/components/DialogModalN';
 import PTDialogModal from '@/components/PTDialogModal';
-import * as BackgroundFetch from 'expo-background-fetch';
-import * as TaskManager from 'expo-task-manager';
+import React from 'react'
+
 
 const Popis = () => {
 
@@ -168,8 +168,16 @@ const Popis = () => {
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [currentId, setCurrentId] = useState<number | null>(null);
 
+  //Stavke Modal N
+  const [modalVisibleN, setModalVisibleN] = useState<boolean>(false);
+  const [currentIdN, setCurrentIdN] = useState<number | null>(null);
+
   // PT Modal
   const [isDialogVisiblePrihodi, setIsDialogVisiblePrihodi] = useState(false);
+  const [isDialogVisibleWolt, setIsDialogVisibleWolt] = useState(false);
+  const [isDialogVisibleGlovo, setIsDialogVisibleGlovo] = useState(false);
+  const [isDialogVisibleSale, setIsDialogVisibleSale] = useState(false);
+  const [isDialogVisibleKartice, setIsDialogVisibleKartice] = useState(false);
   const [isDialogVisibleTroskovi, setIsDialogVisibleTroskovi] = useState(false);
   const [isDialogVisibleVirman, setIsDialogVisibleVirman] = useState(false);
 
@@ -209,6 +217,7 @@ const Popis = () => {
   const logInventoryChange = async (
     id_pice: number,
     id_korisnik: number,
+    column: string,
     old_value: number,
     new_value: number
   ): Promise<void> => {  
@@ -218,11 +227,12 @@ const Popis = () => {
       INSERT INTO change_history (
         id_pice,
         id_korisnik,
+        column,
         old_value,
         new_value,
         timestamp
-      ) VALUES (?, ?, ?, ?, ?);
-    `, [id_pice, id_korisnik, old_value, new_value, localTimestamp]); 
+      ) VALUES (?, ?, ?, ?, ?, ?);
+    `, [id_pice, id_korisnik, column, old_value, new_value, localTimestamp]); 
     } catch (error) {
       console.error('Transaction error:', error);
     }
@@ -301,7 +311,7 @@ const Popis = () => {
     });
 
     setInputValues(initialValues);
-    setOldValue(initialOldValues);
+    setOldValuePocetak(initialOldValues);
 
     if (appWasLeft) {
       setAppWasLeft(false);
@@ -347,30 +357,52 @@ const Popis = () => {
     }));
   };
 
-  const [oldValue, setOldValue] = useState<{ [key: number]: number }>({});
+  const [oldValuePocetak, setOldValuePocetak] = useState<{ [key: number]: number }>({});
+  const [oldValueUneto, setOldValueUneto] = useState<{ [key: number]: number }>({});
 
-  const handleBlur = (item: any, currentValue: string) => {
-  const id_pice = item.id_pice;
-  const numericValue = parseFloat(currentValue) || 0;
-  const previousValue = oldValue[id_pice] || 0;
-
-  if (numericValue !== previousValue && userData) {
-    logInventoryChange(
-      id_pice, 
-      userData?.id_korisnik,
-      previousValue, 
-      numericValue
-    );
-  }
-
-  // Reset the old value for this specific item
-  setOldValue(prev => ({
-    ...prev,
-    [id_pice]: numericValue
-  }));
-
-};
-
+  const handleBlur = (item: Pice, currentValue: string, column: string) => {
+    // console.log("handleBlur called with:", { currentValue, column });
+    
+    const id_pice = item.id_pice;
+    const numericValue = parseFloat(currentValue) || 0;
+    // console.log("numericValue:", numericValue);
+    
+    let previousValue;
+    let setOldValueFunction;
+    
+    if (column === "Početak") {
+      previousValue = oldValuePocetak[id_pice] ?? 0;
+      setOldValueFunction = setOldValuePocetak;
+    } else if (column === "Uneto") {
+      previousValue = oldValueUneto[id_pice] ?? 0;
+      setOldValueFunction = setOldValueUneto;
+    } else {
+      console.error("Invalid column:", column);
+      return;
+    }
+    
+    // console.log("previousValue:", previousValue);
+    
+    // Only log if there's an actual change and we have user data
+    if (numericValue !== previousValue && userData) {
+      // console.log("Value changed. Logging inventory change...");
+      logInventoryChange(
+        id_pice,
+        userData.id_korisnik,
+        column,
+        previousValue,
+        numericValue
+      );
+      
+      // Update the state AFTER logging the change
+      setOldValueFunction(prev => ({
+        ...prev,
+        [id_pice]: numericValue
+      }));
+    } else {
+      console.log("No change detected or userData is missing.");
+    }
+  };
 
   // ================================================================================================================
   // ================================================================================================================
@@ -386,9 +418,21 @@ const Popis = () => {
 
   const handleDialogConfirm = (value: string) => {
     if (currentId !== null) {
-      handleInputChange(currentId, 'kraj', value); // Update the correct row's `kraj` value
+      handleInputChange(currentId, 'kraj', value);
     }
-    setModalVisible(false); // Close the modal
+    setModalVisible(false);
+  };
+
+  const handleDialogPressN = (id: number) => {
+    setCurrentIdN(id);
+    setModalVisibleN(true);
+  };
+
+  const handleDialogConfirmN = (value: string) => {
+    if (currentIdN !== null) {
+      handleInputChange(currentIdN, 'uneto', value);
+    }
+    setModalVisibleN(false);
   };
 
   const calculateSum = (expression: string): number => {
@@ -434,6 +478,26 @@ const Popis = () => {
     setPTInptus((prev) => ({ ...prev, ostalop: value }));
   };
   
+  const handleChangeWolt = (value: string) => {
+    // console.log('Saving Troskovi value to PTInptus:', value);
+    setPTInptus((prev) => ({ ...prev, wolt: value }));
+  };
+
+  const handleChangeGlovo = (value: string) => {
+    // console.log('Saving Troskovi value to PTInptus:', value);
+    setPTInptus((prev) => ({ ...prev, glovo: value }));
+  };
+
+  const handleChangeSale = (value: string) => {
+    // console.log('Saving Troskovi value to PTInptus:', value);
+    setPTInptus((prev) => ({ ...prev, sale: value }));
+  };
+
+  const handleChangeKartice = (value: string) => {
+    // console.log('Saving Troskovi value to PTInptus:', value);
+    setPTInptus((prev) => ({ ...prev, kartice: value }));
+  };
+
   const handleChangeTroskovi = (value: string) => {
     // console.log('Saving Troskovi value to PTInptus:', value);
     setPTInptus((prev) => ({ ...prev, ostalot: value }));
@@ -448,11 +512,26 @@ const Popis = () => {
   const handleCloseDialogPrihodi = () => setIsDialogVisiblePrihodi(false);
 
   
+  const handleOpenDialogWolt = () => setIsDialogVisibleWolt(true);
+  const handleCloseDialogWolt = () => setIsDialogVisibleWolt(false);
+
+  const handleOpenDialogGlovo = () => setIsDialogVisibleGlovo(true);
+  const handleCloseDialogGlovo = () => setIsDialogVisibleGlovo(false);
+
+  const handleOpenDialogSale = () => setIsDialogVisibleSale(true);
+  const handleCloseDialogSale = () => setIsDialogVisibleSale(false);
+
+  const handleOpenDialogKartice = () => setIsDialogVisibleKartice(true);
+  const handleCloseDialogKartice = () => setIsDialogVisibleKartice(false);
+
   const handleOpenDialogTroskovi = () => setIsDialogVisibleTroskovi(true);
   const handleCloseDialogTroskovi = () => setIsDialogVisibleTroskovi(false);
   
   const handleOpenDialogVirman = () => setIsDialogVisibleVirman(true);
   const handleCloseDialogVirman = () => setIsDialogVisibleVirman(false);
+
+
+  
 
   // ================================================================================================================
   // ================================================================================================================
@@ -690,7 +769,6 @@ const Popis = () => {
   return (
     <SafeAreaView className="flex-1">
       <ScrollView keyboardShouldPersistTaps='handled' contentContainerStyle={{ flexGrow: 1 }}>
-        
         {/* Header */}
         <View className="flex bg-secondary rounded-3xl m-4 mb-2 p-4">
           {/* Header Buttons */}
@@ -738,8 +816,8 @@ const Popis = () => {
           </View>
         </View>
 
-        {/* Content */}
-        {["piece", "liters", "kilograms", "other"].map((type) => (
+      {/* Content */}
+      {["piece", "liters", "kilograms", "other"].map((type) => (
         <View key={type} className="mb-6 mx-4 border border-gray-300 rounded-lg shadow-md bg-white">
           {/* Table Title */}
           <View className="bg-secondary rounded-t-lg p-4">
@@ -748,98 +826,112 @@ const Popis = () => {
             </Text>
           </View>
 
-          {/* Table Header */}
-          <View className="flex-row bg-gray-200 border-b-2 border-black py-3">
-            <Text className="w-32 text-center text-l font-bold">Naziv</Text>
-            <Text className="w-24 text-center text-l font-bold">Početak</Text>
-            <Text className="w-24 text-center text-l font-bold">Uneto</Text>
-            <Text className="w-24 text-center text-l font-bold">Kraj</Text>
-            <Text className="w-24 text-center text-l font-bold">Prodato</Text>
-            <Text className="w-24 text-center text-l font-bold">Cena</Text>
-            <Text className="w-28 text-center text-l font-bold">Ukupno</Text>
-          </View>
-
-          {/* Table Rows */}
-          {piceData.filter((item) => item.type === type).map((item) => {
-            const pocetak = parseFloat(inputValues[item.id_pice]?.pocetak || '0');
-            const uneto = parseFloat(inputValues[item.id_pice]?.uneto || '0');
-            const kraj = calculateSum(inputValues[item.id_pice]?.kraj || '0');
-            const prodato = (uneto + pocetak) - kraj;
-            const ukupno = prodato * parseFloat(item.cena);
-            const prodato_other = (kraj - pocetak);
-            const ukupno_other = prodato_other * parseFloat(item.cena);
-
-            // SET VALUES
-
-            return (
-              <View key={item.id_pice} className={`flex-row items-center border-b py-2`}>
-                {/* Naziv */}
-                <Text className="w-32 text-center text-lg">{item.naziv}</Text>
-
-                {/* Početak Input */}
-                {userData?.role === "admin" || userData?.role === "manager" ? (
-                  <TextInput
-                    className="w-24 text-center border border-gray-400 rounded-md px-2 py-2 text-lg bg-gray-100"
-                    keyboardType="number-pad"
-                    placeholder="0"
-                    value={inputValues[item.id_pice]?.pocetak}
-                    onChangeText={(value) => handleInputChange(item.id_pice, "pocetak", value)}
-                    onBlur={() => handleBlur(item, inputValues[item.id_pice]?.pocetak)}
-                  />
-                ) : (
-                  <Text className="w-24 text-center text-lg">{inputValues[item.id_pice]?.pocetak || "0"}</Text>
-                )}
-
-                {/* Uneto Input */}
-                {type === "other" ? (
-                  <Text className="w-24 text-center text-lg">N/A</Text>
-                ) : userData?.role === "admin" || userData?.role === "manager" ? (
-                  <TextInput
-                    keyboardType="number-pad"
-                    className="w-24 text-center border border-gray-400 rounded-md px-2 py-2 text-lg bg-gray-100"
-                    value={inputValues[item.id_pice]?.uneto}
-                    placeholder="0"
-                    placeholderTextColor="#999"
-                    onChangeText={(value) => handleInputChange(item.id_pice, "uneto", value)}
-                  />
-                ) : (
-                  <Text className="w-24 text-center text-lg">
-                  {inputValues[item.id_pice]?.uneto || "0"}
-                </Text>
-                )}
-
-                {/* Kraj Input */}
-                <TouchableOpacity
-                  className="w-24 text-center border border-gray-400 rounded-md px-2 py-2 text-lg bg-gray-100 justify-center items-center"
-                  onPress={() => handleDialogPress(item.id_pice)}
-                >
-                  <Text className="text-lg">{calculateSum(inputValues[item.id_pice]?.kraj || '0').toString()}</Text>
-                </TouchableOpacity>
-
-                <DialogModal
-                  visible={modalVisible && currentId === item.id_pice}
-                  onClose={() => setModalVisible(false)}
-                  onConfirm={handleDialogConfirm}
-                  initialValue={inputValues[item.id_pice]?.kraj || ''}
-                />
-                
-                {/* Prodato */}
-                <Text className="w-24 text-center text-lg">
-                  {type === "other" ? Math.max(0, prodato_other).toString() || "0" : Math.max(0, prodato).toString() || "0"}
-                </Text>
-
-                {/* Cena */}
-                <Text className="w-24 text-center text-lg">{item.cena}</Text>
-
-                {/* Ukupno */}
-                <Text className="w-28 text-center text-lg font-bold">
-                  {type === "other" ? Math.max(0, parseFloat(ukupno_other.toFixed(2))).toString() || "0" : Math.max(0, parseFloat(ukupno.toFixed(2))).toString() || "0"} RSD
-                </Text>
+          <ScrollView keyboardShouldPersistTaps='handled' horizontal showsHorizontalScrollIndicator={true}>
+            <View>
+              {/* Table Header */}
+              <View className="flex-row bg-gray-200 border-b-2 border-black py-3">
+                <Text className="w-32 text-center text-l font-bold">Naziv</Text>
+                <Text className="w-24 text-center text-l font-bold">Početak</Text>
+                <Text className="w-24 text-center text-l font-bold">Uneto</Text>
+                <Text className="w-24 text-center text-l font-bold">Kraj</Text>
+                <Text className="w-24 text-center text-l font-bold">Prodato</Text>
+                <Text className="w-24 text-center text-l font-bold">Cena</Text>
+                <Text className="w-28 text-center text-l font-bold">Ukupno</Text>
               </View>
+
+              {/* Table Rows */}
+              {piceData.filter((item) => item.type === type).map((item) => {
+                const pocetak = parseFloat(inputValues[item.id_pice]?.pocetak || '0');
+                const uneto = parseFloat(inputValues[item.id_pice]?.uneto || '0');
+                const kraj = calculateSum(inputValues[item.id_pice]?.kraj || '0');
+                const prodato = (uneto + pocetak) - kraj;
+                const ukupno = prodato * parseFloat(item.cena);
+                const prodato_other = (kraj - pocetak);
+                const ukupno_other = prodato_other * parseFloat(item.cena);
+
+                return (
+                  <View key={item.id_pice} className={`flex-row items-center border-b py-2`}>
+                    {/* Naziv */}
+                    <Text className="w-32 text-center text-lg">{item.naziv}</Text>
+
+                    {/* Početak Input */}
+                    {userData?.role === "admin" || userData?.role === "manager" ? (
+                      <TextInput
+                        className="w-24 text-center border border-gray-400 rounded-md px-2 py-2 text-lg bg-gray-100"
+                        keyboardType="number-pad"
+                        placeholder="0"
+                        value={inputValues[item.id_pice]?.pocetak}
+                        onChangeText={(value) => handleInputChange(item.id_pice, "pocetak", value)}
+                        onBlur={() => handleBlur(item, inputValues[item.id_pice]?.pocetak, "Početak")}
+                      />
+                    ) : (
+                      <Text className="w-24 text-center text-lg">{inputValues[item.id_pice]?.pocetak || "0"}</Text>
+                    )}
+
+                    {/* Uneto Input */}
+                    {type === "other" ? (
+                      <Text className="w-24 text-center text-lg">N/A</Text>
+                    ) : (
+                      <>
+                        <TouchableOpacity
+                          className="w-24 text-center border border-gray-400 rounded-md px-2 py-2 text-lg bg-gray-100 justify-center items-center"
+                          onPress={() => handleDialogPressN(item.id_pice)}
+                        >
+                          <Text className="text-lg">{(inputValues[item.id_pice]?.uneto || '0').toString()}</Text>
+                        </TouchableOpacity>
+
+                        <DialogModalN
+                          visible={modalVisibleN && currentIdN === item.id_pice}
+                          onClose={() => {
+                            setModalVisibleN(false);
+                            // Get the current value from inputValues instead of using a local value
+                            const currentValue = inputValues[item.id_pice]?.uneto || '0';
+                            handleBlur(item, currentValue, 'Uneto');
+                          }}
+                          onConfirm={(value) => {
+                            handleDialogConfirmN(value);
+                            // Call handleBlur with the new value immediately after confirming
+                            handleBlur(item, value, 'Uneto');
+                          }}
+                          initialValue={inputValues[item.id_pice]?.uneto || ''}
+                        />
+                      </>
+                    )}
+
+                    {/* Kraj Input */}
+                    <TouchableOpacity
+                      className="w-24 text-center border border-gray-400 rounded-md px-2 py-2 text-lg bg-gray-100 justify-center items-center"
+                      onPress={() => handleDialogPress(item.id_pice)}
+                    >
+                      <Text className="text-lg">{calculateSum(inputValues[item.id_pice]?.kraj || '0').toString()}</Text>
+                    </TouchableOpacity>
+
+                    <DialogModal
+                      visible={modalVisible && currentId === item.id_pice}
+                      onClose={() => setModalVisible(false)}
+                      onConfirm={handleDialogConfirm}
+                      initialValue={inputValues[item.id_pice]?.kraj || ''}
+                    />
+                    
+                    {/* Prodato */}
+                    <Text className="w-24 text-center text-lg">
+                      {type === "other" ? Math.max(0, prodato_other).toString() || "0" : Math.max(0, prodato).toString() || "0"}
+                    </Text>
+
+                    {/* Cena */}
+                    <Text className="w-24 text-center text-lg">{item.cena}</Text>
+
+                    {/* Ukupno */}
+                    <Text className="w-28 text-center text-lg font-bold">
+                      {type === "other" ? Math.max(0, parseFloat(ukupno_other.toFixed(2))).toString() || "0" : Math.max(0, parseFloat(ukupno.toFixed(2))).toString() || "0"} RSD
+                    </Text>
+                  </View>
                 );
               })}
             </View>
-          ))}
+          </ScrollView>
+        </View>
+      ))}
 
 
         <View className="m-4 mt-2">
@@ -916,26 +1008,42 @@ const Popis = () => {
         <View className="flex flex-row py-2 border-b border-black">
           <View className="flex-1 px-2">
             <Text className="text-left pl-1 font-semibold mb-1">Wolt</Text>
-            <TextInput
-              className="h-14 border border-gray-400 rounded px-2"
-              keyboardType="number-pad"
-              value={PTInptus.wolt}
-              onChangeText={(value: string) => 
-                setPTInptus(prev => ({ ...prev, wolt: value }))
+            <TouchableOpacity className='h-14 border border-gray-400 rounded px-2 justify-center items-start' onPress={handleOpenDialogWolt}>
+            <Text className={PTInptus.wolt === "" ? "text-gray-400" : "text-black"}>
+            {PTInptus.wolt === "" 
+              ? "Unesi wolt..." 
+              : PTInptus.wolt.split('+')
+                  .map(num => parseInt(num, 10))
+                  .reduce((sum, num) => sum + num, 0)
+                  .toString()
               }
-              placeholder="Unesi wolt..."
+            </Text>
+            </TouchableOpacity>
+            <PTDialogModal
+              initialValue={PTInptus.wolt}
+              onConfirm={handleChangeWolt}
+              onClose={handleCloseDialogWolt}
+              isVisible={isDialogVisibleWolt}
             />
           </View>
           <View className="flex-1 px-2">
             <Text className="text-left pl-1 font-semibold mb-1">Glovo</Text>
-            <TextInput
-              className="h-14 border border-gray-400 rounded px-2"
-              keyboardType="number-pad"
-              value={PTInptus.glovo}
-              onChangeText={(value: string) => 
-                setPTInptus(prev => ({ ...prev, glovo: value }))
+            <TouchableOpacity className='h-14 border border-gray-400 rounded px-2 justify-center items-start' onPress={handleOpenDialogGlovo}>
+            <Text className={PTInptus.glovo === "" ? "text-gray-400" : "text-black"}>
+            {PTInptus.glovo === "" 
+              ? "Unesi glovo..." 
+              : PTInptus.glovo.split('+')
+                  .map(num => parseInt(num, 10))
+                  .reduce((sum, num) => sum + num, 0)
+                  .toString()
               }
-              placeholder="Unesi glovo..."
+            </Text>
+            </TouchableOpacity>
+            <PTDialogModal
+              initialValue={PTInptus.glovo}
+              onConfirm={handleChangeGlovo}
+              onClose={handleCloseDialogGlovo}
+              isVisible={isDialogVisibleGlovo}
             />
           </View>
         </View>
@@ -943,26 +1051,42 @@ const Popis = () => {
         <View className="flex flex-row py-2 border-b border-black">
           <View className="flex-1 px-2">
             <Text className="text-left pl-1 font-semibold mb-1">Sale</Text>
-            <TextInput
-              className="h-14 border border-gray-400 rounded px-2"
-              keyboardType="number-pad"
-              value={PTInptus.sale}
-              onChangeText={(value: string) => 
-                setPTInptus(prev => ({ ...prev, sale: value }))
+            <TouchableOpacity className='h-14 border border-gray-400 rounded px-2 justify-center items-start' onPress={handleOpenDialogSale}>
+            <Text className={PTInptus.sale === "" ? "text-gray-400" : "text-black"}>
+            {PTInptus.sale === "" 
+              ? "Unesi sale..." 
+              : PTInptus.sale.split('+')
+                  .map(num => parseInt(num, 10))
+                  .reduce((sum, num) => sum + num, 0)
+                  .toString()
               }
-              placeholder="Unesi sale..."
+            </Text>
+            </TouchableOpacity>
+            <PTDialogModal
+              initialValue={PTInptus.sale}
+              onConfirm={handleChangeSale}
+              onClose={handleCloseDialogSale}
+              isVisible={isDialogVisibleSale}
             />
           </View>
           <View className="flex-1 px-2">
             <Text className="text-left pl-1 font-semibold mb-1">Kartice</Text>
-            <TextInput
-              className="h-14 border border-gray-400 rounded px-2"
-              keyboardType="number-pad"
-              value={PTInptus.kartice}
-              onChangeText={(value: string) =>
-                setPTInptus((prev) => ({ ...prev, kartice: value }))
+            <TouchableOpacity className='h-14 border border-gray-400 rounded px-2 justify-center items-start' onPress={handleOpenDialogKartice}>
+            <Text className={PTInptus.kartice === "" ? "text-gray-400" : "text-black"}>
+            {PTInptus.kartice === "" 
+              ? "Unesi kartice..." 
+              : PTInptus.kartice.split('+')
+                  .map(num => parseInt(num, 10))
+                  .reduce((sum, num) => sum + num, 0)
+                  .toString()
               }
-              placeholder="Unesi kartice..."
+            </Text>
+            </TouchableOpacity>
+            <PTDialogModal
+              initialValue={PTInptus.kartice}
+              onConfirm={handleChangeKartice}
+              onClose={handleCloseDialogKartice}
+              isVisible={isDialogVisibleKartice}
             />
           </View>
         </View>
@@ -1088,10 +1212,10 @@ const Popis = () => {
             <Text className="text-lg font-bold">Troškovi:</Text>
             <Text className="text-lg">
               - {((
-                parseInt(PTInptus.wolt || "0") + 
-                parseInt(PTInptus.glovo || "0") + 
-                parseInt(PTInptus.sale || "0") + 
-                parseInt(PTInptus.kartice || "0") + 
+                parseInt(evaluateExpression(PTInptus.wolt) || "0") + 
+                parseInt(evaluateExpression(PTInptus.glovo) || "0") + 
+                parseInt(evaluateExpression(PTInptus.sale) || "0") + 
+                parseInt(evaluateExpression(PTInptus.kartice) || "0") + 
                 parseInt( evaluateExpression(PTInptus.ostalot) || "0") + 
                 parseInt( evaluateExpression(PTInptus.virman) || "0")
                 ).toFixed(2))} RSD
@@ -1109,10 +1233,10 @@ const Popis = () => {
                   (parseInt(PTInptus.kuhinja || "0") + 
                   parseInt(PTInptus.ks || "0") + 
                   parseInt(evaluateExpression(PTInptus.ostalop) || "0")) - 
-                  (parseInt(PTInptus.wolt || "0") + 
-                  parseInt(PTInptus.glovo || "0") + 
-                  parseInt(PTInptus.sale || "0") + 
-                  parseInt(PTInptus.kartice || "0") + 
+                  (parseInt(evaluateExpression(PTInptus.wolt) || "0") + 
+                  parseInt(evaluateExpression(PTInptus.glovo) || "0") + 
+                  parseInt(evaluateExpression(PTInptus.sale) || "0") + 
+                  parseInt(evaluateExpression(PTInptus.kartice) || "0") + 
                   parseInt(evaluateExpression(PTInptus.ostalot)|| "0") + 
                   parseInt(evaluateExpression(PTInptus.virman) || "0"))
                 ).toFixed(2)

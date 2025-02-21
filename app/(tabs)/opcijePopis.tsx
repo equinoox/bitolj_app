@@ -280,10 +280,10 @@ const opcijePopis = () => {
       };
 
       const calculateTotalTroskovi = (troskoviValues: TroskoviValues): number => {
-        const wolt = parseFloat(troskoviValues.wolt) || 0;
-        const glovo = parseFloat(troskoviValues.glovo) || 0;
-        const sale = parseFloat(troskoviValues.sale) || 0;
-        const kartice = parseFloat(troskoviValues.kartice) || 0;
+        const wolt = parseFloat(evaluateExpression(troskoviValues.wolt)) || 0;
+        const glovo = parseFloat(evaluateExpression(troskoviValues.glovo)) || 0;
+        const sale = parseFloat(evaluateExpression(troskoviValues.sale)) || 0;
+        const kartice = parseFloat(evaluateExpression(troskoviValues.kartice)) || 0;
         const ostalot = parseFloat(evaluateExpression(troskoviValues.ostalot)) || 0;
         const virman = parseFloat(evaluateExpression(troskoviValues.virman)) || 0;
       
@@ -582,97 +582,109 @@ const opcijePopis = () => {
               <Text className="text-white font-bold">Izbriši Popis</Text>
             </TouchableOpacity>
         </View>
-      {selectedPopis && (
-      <View className="w-full bg-white shadow-md">
-        <View className="flex flex-row border-b px-2 bg-secondary">
-        <Text className="flex-1 text-center text-primary font-bold text-xl py-2">
-        {`${korisnici.find(k => k.id_korisnik === selectedPopis?.id_korisnik)?.ime || "Nepoznato Ime"} ${korisnici.find(k => k.id_korisnik === selectedPopis?.id_korisnik)?.prezime || "Nepoznat Prezime"} | ${selectedPopis.smena === "prva" ? "Prva smena" : "Druga smena"}\n${selectedPopis.datum.toString()}`}
-        </Text>
-        </View>
-        <View className="flex flex-row border-b bg-secondary">
-          <Text className="flex-1 text-center text-orange font-bold text-xl py-2">
-            Stavke Popisa
-          </Text>
-        </View>
-        {/* Header */}
-        <View className="flex flex-row border-b bg-secondary">
-          <Text className="flex-1 text-center text-white text-lg font-bold py-2">Naziv</Text>
-          <Text className="flex-1 text-center text-white text-lg font-bold py-2">Početak</Text>
-          <Text className="flex-1 text-center text-white text-lg font-bold py-2">Uneto</Text>
-          <Text className="flex-1 text-center text-white text-lg font-bold py-2">Kraj</Text>
-          <Text className="flex-1 text-center text-white text-lg font-bold py-2">Prodato</Text>
-          <Text className="flex-1 text-center text-white text-lg font-bold py-2">Cena</Text>
-          <Text className="flex-1 text-center text-white text-lg font-bold py-2">Ukupno</Text>
-        </View>
 
-        {/* Rows */}
-        {dataStavka.map((stavka) => {
-          const matchingPice = dataPice.find((pice) => pice.id_pice === stavka.id_pice);
-          const values = inputValues[stavka.id_stavka_popisa] || {
-              pocetno_stanje: '',
-              uneto: '',
-              krajnje_stanje: ''
-            };
-          return (
-            <View
-              key={stavka.id_stavka_popisa}
-              className="flex flex-row border-b items-center justify-center"
-            >
-              <Text className="flex-1 text-center text-lg text-gray-700 py-2">
-                {matchingPice?.naziv || 'N/A'}
-              </Text>
-              <TextInput 
-              keyboardType='number-pad'
-              className="w-24 flex-1 text-center text-lg text-gray-700 py-2 border rounded-md my-2 bg-gray-100 border-gray-400"
-              value={values.pocetak}
-              onChangeText={(value) => handleInputChange(stavka.id_stavka_popisa, 'pocetak', value)}
-              />
-
-              {matchingPice?.type !== "other" ? (
-              <TextInput
-                  keyboardType="number-pad"
-                  className="w-24 flex-1 text-center text-lg text-gray-700 py-2 border rounded-md my-2 bg-gray-100 border-gray-400"
-                  value={values.uneto}
-                  onChangeText={(value) => handleInputChange(stavka.id_stavka_popisa, 'uneto', value)}
-              />
-              ) : (
-                  <Text className="w-24 flex-1 text-center my-2 text-lg text-gray-700 py-2">
-                      N/A
-                  </Text>
-              )}
-              <TextInput
-                keyboardType='default'
-                className="w-24 flex-1 text-center text-lg text-gray-700 py-2 border rounded-md my-2 bg-gray-100 border-gray-400"
-                value={localExpressions[stavka.id_stavka_popisa] || ''}
-                onChangeText={(value) => {
-                  const sanitizedValue = value.replace(/[^0-9+]/g, '');
-                  setLocalExpressions(prev => ({
-                    ...prev,
-                    [stavka.id_stavka_popisa]: sanitizedValue
-                  }));
-                }}
-                onBlur={() => {
-                  handleInputChange(
-                    stavka.id_stavka_popisa,
-                    'kraj',
-                    localExpressions[stavka.id_stavka_popisa] || ''
-                  );
-                }}
-              />
-              <Text className="flex-1 text-center text-lg text-gray-700 py-2">
-                {matchingPice?.type !== "other" ? calculateProdato(stavka) : calculateProdatoOther(stavka)}
-              </Text>
-              <Text className="flex-1 text-center text-lg text-gray-700 py-2">
-                {matchingPice?.cena || 'N/A'}
-              </Text>
-              <Text className="flex-1 text-center text-lg font-bold text-secondary py-2">
-              {matchingPice?.type !== "other" ? calculateTotal(stavka, matchingPice) : calculateTotalOther(stavka, matchingPice)} din
+        {selectedPopis && (
+          <View className="w-full bg-white shadow-md">
+            <View className="flex flex-row border-b px-2 bg-secondary">
+              <Text className="flex-1 text-center text-primary font-bold text-xl py-2">
+                {`${korisnici.find(k => k.id_korisnik === selectedPopis?.id_korisnik)?.ime || "Nepoznato Ime"} ${korisnici.find(k => k.id_korisnik === selectedPopis?.id_korisnik)?.prezime || "Nepoznat Prezime"} | ${selectedPopis.smena === "prva" ? "Prva smena" : "Druga smena"}\n${selectedPopis.datum.toString()}`}
               </Text>
             </View>
-          );
-        })}
-        </View>
-      )}
+            <View className="flex flex-row border-b bg-secondary">
+              <Text className="flex-1 text-center text-orange font-bold text-xl py-2">
+                Stavke Popisa
+              </Text>
+            </View>
+
+            <ScrollView horizontal showsHorizontalScrollIndicator={true}>
+              <View>
+                {/* Header */}
+                <View className="flex-row border-b bg-secondary">
+                  <Text className="w-32 text-center text-white text-lg font-bold py-2">Naziv</Text>
+                  <Text className="w-32 text-center text-white text-lg font-bold py-2">Početak</Text>
+                  <Text className="w-32 text-center text-white text-lg font-bold py-2">Uneto</Text>
+                  <Text className="w-32 text-center text-white text-lg font-bold py-2">Kraj</Text>
+                  <Text className="w-32 text-center text-white text-lg font-bold py-2">Prodato</Text>
+                  <Text className="w-32 text-center text-white text-lg font-bold py-2">Cena</Text>
+                  <Text className="w-32 text-center text-white text-lg font-bold py-2">Ukupno</Text>
+                </View>
+
+                {/* Rows */}
+                {dataStavka.map((stavka) => {
+                  const matchingPice = dataPice.find((pice) => pice.id_pice === stavka.id_pice);
+                  const values = inputValues[stavka.id_stavka_popisa] || {
+                    pocetno_stanje: '',
+                    uneto: '',
+                    krajnje_stanje: ''
+                  };
+                  
+                  return (
+                    <View
+                      key={stavka.id_stavka_popisa}
+                      className="flex-row border-b items-center justify-center"
+                    >
+                      <Text className="w-32 text-center text-lg text-gray-700 py-2">
+                        {matchingPice?.naziv || 'N/A'}
+                      </Text>
+                      
+                      <TextInput 
+                        keyboardType='number-pad'
+                        className="w-32 text-center text-lg text-gray-700 py-2 mx-1 border rounded-md my-2 bg-gray-100 border-gray-400"
+                        value={values.pocetak}
+                        onChangeText={(value) => handleInputChange(stavka.id_stavka_popisa, 'pocetak', value)}
+                      />
+
+                      {matchingPice?.type !== "other" ? (
+                        <TextInput
+                          keyboardType="number-pad"
+                          className="w-32 text-center text-lg text-gray-700 py-2 mx-1 border rounded-md my-2 bg-gray-100 border-gray-400"
+                          value={values.uneto}
+                          onChangeText={(value) => handleInputChange(stavka.id_stavka_popisa, 'uneto', value)}
+                        />
+                      ) : (
+                        <Text className="w-32 text-center my-2 text-lg text-gray-700 py-2">
+                          N/A
+                        </Text>
+                      )}
+
+                      <TextInput
+                        keyboardType='default'
+                        className="w-32 text-center text-lg text-gray-700 py-2 mx-1 border rounded-md my-2 bg-gray-100 border-gray-400"
+                        value={localExpressions[stavka.id_stavka_popisa] || ''}
+                        onChangeText={(value) => {
+                          const sanitizedValue = value.replace(/[^0-9+]/g, '');
+                          setLocalExpressions(prev => ({
+                            ...prev,
+                            [stavka.id_stavka_popisa]: sanitizedValue
+                          }));
+                        }}
+                        onBlur={() => {
+                          handleInputChange(
+                            stavka.id_stavka_popisa,
+                            'kraj',
+                            localExpressions[stavka.id_stavka_popisa] || ''
+                          );
+                        }}
+                      />
+
+                      <Text className="w-28 text-center text-lg text-gray-700 py-2">
+                        {matchingPice?.type !== "other" ? calculateProdato(stavka) : calculateProdatoOther(stavka)}
+                      </Text>
+
+                      <Text className="w-28 text-center text-lg text-gray-700 py-2">
+                        {matchingPice?.cena || 'N/A'}
+                      </Text>
+
+                      <Text className="w-28 text-center text-lg font-bold text-secondary py-2">
+                        {matchingPice?.type !== "other" ? calculateTotal(stavka, matchingPice) : calculateTotalOther(stavka, matchingPice)} din
+                      </Text>
+                    </View>
+                  );
+                })}
+              </View>
+            </ScrollView>
+          </View>
+        )}
 
       {selectedPopis && (
         <>
@@ -734,69 +746,71 @@ const opcijePopis = () => {
             <View className="flex flex-row border-b bg-secondary">
               <Text className="flex-1 text-center text-red-600 font-bold text-xl py-2">Troškovi</Text>
             </View>
-            <View className="flex flex-row justify-center items-center border-b bg-secondary">
-              <Text className="flex-1 text-center text-white text-lg font-bold py-2">Wolt</Text>
-              <Text className="flex-1 text-center text-white text-lg font-bold py-2">Glovo</Text>
-              <Text className="flex-1 text-center text-white text-lg font-bold py-2">Sale</Text>
-              <Text className="flex-1 text-center text-white text-lg font-bold py-2">Kartice</Text>
-              <Text className="flex-1 text-center text-white text-lg font-bold py-2">Ostali Troškovi</Text>
-              <Text className="flex-1 text-center text-white text-lg font-bold py-2">Virmani</Text>
-              <Text className="flex-1 text-center text-white text-lg font-bold py-2">Ukupno</Text>
-            </View>
-            <View className="flex flex-row border-b">
-              <TextInput
-              keyboardType='number-pad'
-              className="flex-1 text-center text-gray-700 text-lg py-2 border rounded-md my-2 bg-gray-100 border-gray-400"
-              value={troskoviValues.wolt}
-              onChangeText={(value) => handleTroskoviChange('wolt', value)}
-              />
 
-              <TextInput
-              keyboardType='number-pad'
-              className="flex-1 text-center text-gray-700 text-lg py-2 border rounded-md my-2 bg-gray-100 border-gray-400"
-              value={troskoviValues.glovo}
-              onChangeText={(value) => handleTroskoviChange('glovo', value)}
-              />
+            <ScrollView horizontal showsHorizontalScrollIndicator={true}>
+              <View>
+                {/* Titles */}
+                <View className="flex-row justify-center items-center border-b bg-secondary">
+                  <Text className="w-28 text-center text-white text-lg font-bold py-2">Wolt</Text>
+                  <Text className="w-28 text-center text-white text-lg font-bold py-2">Glovo</Text>
+                  <Text className="w-28 text-center text-white text-lg font-bold py-2">Sale</Text>
+                  <Text className="w-28 text-center text-white text-lg font-bold py-2">Kartice</Text>
+                  <Text className="w-28 text-center text-white text-lg font-bold py-2">Ostali Troškovi</Text>
+                  <Text className="w-28 text-center text-white text-lg font-bold py-2">Virmani</Text>
+                  <Text className="w-28 text-center text-white text-lg font-bold py-2">Ukupno</Text>
+                </View>
 
-              <TextInput
-              keyboardType='number-pad'
-              className="flex-1 text-center text-gray-700 text-lg py-2 border rounded-md my-2 bg-gray-100 border-gray-400"
-              value={troskoviValues.sale}
-              onChangeText={(value) => handleTroskoviChange('sale', value)}
-              />
+                {/* Inputs under Titles */}
+                <View className="flex-row border-b">
+                  <TextInput
+                    keyboardType="number-pad"
+                    className="w-28 text-center text-gray-700 text-lg py-2 border rounded-md my-2 bg-gray-100 border-gray-400"
+                    value={evaluateExpression(troskoviValues.wolt)}
+                    onChangeText={(value) => handleTroskoviChange("wolt", value)}
+                  />
 
-              <TextInput
-              keyboardType='number-pad'
-              className="flex-1 text-center text-gray-700 text-lg py-2 border rounded-md my-2 bg-gray-100 border-gray-400"
-              value={troskoviValues.kartice}
-              onChangeText={(value) => handleTroskoviChange('kartice', value)}
-              />
+                  <TextInput
+                    keyboardType="number-pad"
+                    className="w-28 text-center text-gray-700 text-lg py-2 border rounded-md my-2 bg-gray-100 border-gray-400"
+                    value={evaluateExpression(troskoviValues.glovo)}
+                    onChangeText={(value) => handleTroskoviChange("glovo", value)}
+                  />
 
-              <TextInput
-              keyboardType='number-pad'
-              className="flex-1 text-center text-gray-700 text-lg py-2 border rounded-md my-2 bg-gray-100 border-gray-400"
-              value={evaluateExpression(troskoviValues.ostalot)}
-              onChangeText={(value) => handleTroskoviChange('ostalot', value)}
-              onPress={() => {
-                const expression = troskoviValues.ostalot || 'N/A';
-                Alert.alert('Izraz', `Sabirak: ${expression}`);
-              }}
-              />
+                  <TextInput
+                    keyboardType="number-pad"
+                    className="w-28 text-center text-gray-700 text-lg py-2 border rounded-md my-2 bg-gray-100 border-gray-400"
+                    value={evaluateExpression(troskoviValues.sale)}
+                    onChangeText={(value) => handleTroskoviChange("sale", value)}
+                  />
 
-              <TextInput
-              keyboardType='number-pad'
-              className="flex-1 text-center text-gray-700 text-lg py-2 border rounded-md my-2 bg-gray-100 border-gray-400"
-              value={evaluateExpression(troskoviValues.virman)}
-              onChangeText={(value) => handleTroskoviChange('virman', value)}
-              onPress={() => {
-                const expression = troskoviValues.virman || 'N/A';
-                Alert.alert('Izraz', `Sabirak: ${expression}`);
-              }}
-              />
-              <Text className="flex-1 text-center font-bold text-secondary text-lg py-2">
-              {calculateTotalTroskovi(troskoviValues).toFixed(2)} din
-              </Text>
-            </View>
+                  <TextInput
+                    keyboardType="number-pad"
+                    className="w-28 text-center text-gray-700 text-lg py-2 border rounded-md my-2 bg-gray-100 border-gray-400"
+                    value={evaluateExpression(troskoviValues.kartice)}
+                    onChangeText={(value) => handleTroskoviChange("kartice", value)}
+                  />
+
+                  <TextInput
+                    keyboardType="number-pad"
+                    className="w-28 text-center text-gray-700 text-lg py-2 border rounded-md my-2 bg-gray-100 border-gray-400"
+                    value={evaluateExpression(troskoviValues.ostalot)}
+                    onChangeText={(value) => handleTroskoviChange("ostalot", value)}
+                  />
+
+                  <TextInput
+                    keyboardType="number-pad"
+                    className="w-28 text-center text-gray-700 text-lg py-2 border rounded-md my-2 bg-gray-100 border-gray-400"
+                    value={evaluateExpression(troskoviValues.virman)}
+                    onChangeText={(value) => handleTroskoviChange("virman", value)}
+                  />
+
+                  {/* Total */}
+                  <Text className="w-28 text-center font-bold text-secondary text-lg py-2">
+                    {calculateTotalTroskovi(troskoviValues).toFixed(2)} din
+                  </Text>
+                </View>
+              </View>
+            </ScrollView>
             {/* Description section for Troškovi */}
             <View className="flex flex-col">
               <View className="flex flex-row bg-gray-100">

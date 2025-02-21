@@ -28,6 +28,7 @@ export const createTables = async (db: SQLiteDatabase) => {
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           id_pice INTEGER NOT NULL,
           id_korisnik INTEGER NOT NULL,
+          column TEXT NOT NULL,
           old_value INTEGER NOT NULL,
           new_value INTEGER NOT NULL,
           timestamp DATETIME,

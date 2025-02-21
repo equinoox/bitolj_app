@@ -8,6 +8,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useState, useCallback } from 'react'
 import { useSQLiteContext } from 'expo-sqlite';
 import { useFocusEffect } from 'expo-router';
+import  PdfGenerator  from '../../components/PdfGenerator';
 
 
 const VidiPopis = () => {
@@ -60,6 +61,27 @@ const VidiPopis = () => {
   const [dataPice, setDataPice] = useState<Pice[]>([]);
   const [dataStavka, setDataStavka] = useState<Stavka_Popisa[]>([])
   const [korisnici, setKorisnici] = useState<{ id_korisnik: number; ime: string; prezime: string }[]>([]);
+
+  const [isModalVisible, setIsModalVisible] = useState(false);
+
+
+  const printConfirm = () => {
+    Alert.alert(
+      "Print confirm",
+      "Da li želite da konvertujete ovaj popis u PDF??",
+      [{ text: "Ne" , style: 'cancel'}, { text: "Da", onPress: () => handlePDFPrint()}]
+    );
+  }
+
+  const handlePDFPrint = () => {
+    if (selectedPopis && dataStavka.length > 0) {
+      setIsModalVisible(true);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setIsModalVisible(false);
+  };
 
   const loadData = async () => {
     try{
@@ -136,6 +158,41 @@ const VidiPopis = () => {
     }
   };
 
+
+  interface HandlePDFPrintProps {
+    selectedPopis: Popis | null;
+    dataStavka: Stavka_Popisa[];
+  }
+
+  // const handlePDFPrint = async ({ selectedPopis, dataStavka, dataPice }: {
+  //   selectedPopis: Popis | null;
+  //   dataStavka: Stavka_Popisa[];
+  //   dataPice: Pice[];
+  // }) => {
+
+  //   if (!selectedPopis) {
+  //     console.warn('No popis selected');
+  //     return;
+  //   }
+  
+  //   try {
+  //     const title = `Popis ${selectedPopis.datum} - Smena ${selectedPopis.smena}`;
+  //     console.log("Ulazi")
+
+  //     return (
+  //       <PdfGenerator
+  //         title={title}
+  //         dataStavka={dataStavka}
+  //         dataPopis={selectedPopis}
+  //         dataPice={dataPice}
+  //       />
+  //     );
+  
+  //   } catch (error) {
+  //     console.error('Error generating PDF:', error);
+  //   }
+  // };
+
   useFocusEffect(
     useCallback(() => {
       loadData();
@@ -176,7 +233,6 @@ const VidiPopis = () => {
         </View>
 
         {/* Content */}
-
         <View className="m-4">
           <View className="flex flex-row justify-center items-center mb-4">
             <Text className="text-lg font-bold text-black mx-2">Izaberite Popis:</Text>
@@ -202,71 +258,95 @@ const VidiPopis = () => {
                 ))}
               </Picker>
             </View>
+            <TouchableOpacity
+              className={`ml-2 px-6 py-4 rounded ${
+                selectedPopis ? "bg-orange" : "bg-gray-400 text-primary"
+              }`}
+              onPress={printConfirm}
+              disabled={!selectedPopis}
+            >
+              <Text className="text-white font-bold">Štampaj Popis</Text>
+            </TouchableOpacity>
+            {selectedPopis && (
+              <PdfGenerator
+                visible={isModalVisible}
+                onClose={handleCloseModal}
+                title={korisnici.find(k => k.id_korisnik === selectedPopis?.id_korisnik)?.ime || "Nepoznato Ime"}
+                dataStavka={dataStavka}
+                dataPopis={selectedPopis}
+                dataPice={dataPice}
+              />
+            )}
           </View>
         
-        {selectedPopis && (
-        <View className="w-full bg-white shadow-md">
-          <View className="flex flex-row border-b px-2 bg-secondary">
-          <Text className="flex-1 text-center text-primary font-bold text-xl py-2">
-          {`${korisnici.find(k => k.id_korisnik === selectedPopis?.id_korisnik)?.ime || "Nepoznato Ime"} ${korisnici.find(k => k.id_korisnik === selectedPopis?.id_korisnik)?.prezime || "Nepoznat Prezime"} | ${selectedPopis.smena === "prva" ? "Prva smena" : "Druga smena"}\n${selectedPopis.datum.toString()}`}
-          </Text>
-          </View>
-          <View className="flex flex-row border-b bg-secondary">
-            <Text className="flex-1 text-center text-orange font-bold text-xl py-2">
-              Stavke Popisa
-            </Text>
-          </View>
-          {/* Header */}
-          <View className="flex flex-row border-b bg-secondary">
-            <Text className="flex-1 text-center text-white text-lg font-bold py-2">Naziv</Text>
-            <Text className="flex-1 text-center text-white text-lg font-bold py-2">Početak</Text>
-            <Text className="flex-1 text-center text-white text-lg font-bold py-2">Uneto</Text>
-            <Text className="flex-1 text-center text-white text-lg font-bold py-2">Kraj</Text>
-            <Text className="flex-1 text-center text-white text-lg font-bold py-2">Prodato</Text>
-            <Text className="flex-1 text-center text-white text-lg font-bold py-2">Cena</Text>
-            <Text className="flex-1 text-center text-white text-lg font-bold py-2">Ukupno</Text>
-          </View>
-  
-          {/* Rows */}
-          {dataStavka.map((stavka) => {
-            const matchingPice = dataPice.find((pice) => pice.id_pice === stavka.id_pice);
-            return (
-              <View
-                key={stavka.id_stavka_popisa}
-                className="flex flex-row border-b items-center justify-center"
-              >
-                <Text className="flex-1 text-center text-lg text-gray-700 py-2">
-                  {matchingPice?.naziv || 'N/A'}
-                </Text>
-                <Text className="flex-1 text-center text-lg text-gray-700 py-2">
-                  {stavka.pocetno_stanje || 'N/A'}
-                </Text>
-                <Text className="flex-1 text-center text-lg text-gray-700 py-2">
-                  {stavka.uneto || 'N/A'}
-                </Text>
-                <Text
-                  className="flex-1 text-center text-lg text-gray-700 py-2"
-                  onPress={() => {
-                    const expression = stavka.krajnje_stanje || 'N/A';
-                    Alert.alert('Izraz', `Sabirak: ${expression}`);
-                  }}
-                >
-                  {evaluateExpression(stavka.krajnje_stanje) || '0'}
-                </Text>
-                <Text className="flex-1 text-center text-lg text-gray-700 py-2">
-                  {stavka.prodato || 'N/A'}
-                </Text>
-                <Text className="flex-1 text-center text-lg text-gray-700 py-2">
-                  {matchingPice?.cena || 'N/A'}
-                </Text>
-                <Text className="flex-1 text-center text-lg font-bold text-secondary py-2">
-                  {stavka.ukupno || 'N/A'} din
+          {selectedPopis && (
+            <View className="w-full bg-white shadow-md">
+              <View className="flex flex-row border-b px-2 bg-secondary">
+                <Text className="flex-1 text-center text-primary font-bold text-xl py-2">
+                  {`${korisnici.find(k => k.id_korisnik === selectedPopis?.id_korisnik)?.ime || "Nepoznato Ime"} ${korisnici.find(k => k.id_korisnik === selectedPopis?.id_korisnik)?.prezime || "Nepoznat Prezime"} | ${selectedPopis.smena === "prva" ? "Prva smena" : "Druga smena"}\n${selectedPopis.datum.toString()}`}
                 </Text>
               </View>
-            );
-          })}
-          </View>
-        )}
+              <View className="flex flex-row border-b bg-secondary">
+                <Text className="flex-1 text-center text-orange font-bold text-xl py-2">
+                  Stavke Popisa
+                </Text>
+              </View>
+              
+              <ScrollView horizontal showsHorizontalScrollIndicator={true}>
+                <View>
+                  {/* Header */}
+                  <View className="flex-row border-b bg-secondary">
+                    <Text className="w-32 text-center text-white text-lg font-bold py-2">Naziv</Text>
+                    <Text className="w-32 text-center text-white text-lg font-bold py-2">Početak</Text>
+                    <Text className="w-32 text-center text-white text-lg font-bold py-2">Uneto</Text>
+                    <Text className="w-32 text-center text-white text-lg font-bold py-2">Kraj</Text>
+                    <Text className="w-32 text-center text-white text-lg font-bold py-2">Prodato</Text>
+                    <Text className="w-32 text-center text-white text-lg font-bold py-2">Cena</Text>
+                    <Text className="w-32 text-center text-white text-lg font-bold py-2">Ukupno</Text>
+                  </View>
+
+                  {/* Rows */}
+                  {dataStavka.map((stavka) => {
+                    const matchingPice = dataPice.find((pice) => pice.id_pice === stavka.id_pice);
+                    return (
+                      <View
+                        key={stavka.id_stavka_popisa}
+                        className="flex-row border-b items-center justify-center"
+                      >
+                        <Text className="w-32 text-center text-lg text-gray-700 py-2">
+                          {matchingPice?.naziv || 'N/A'}
+                        </Text>
+                        <Text className="w-32 text-center text-lg text-gray-700 py-2">
+                          {stavka.pocetno_stanje || 'N/A'}
+                        </Text>
+                        <Text className="w-32 text-center text-lg text-gray-700 py-2">
+                          {stavka.uneto || 'N/A'}
+                        </Text>
+                        <Text
+                          className="w-32 text-center text-lg text-gray-700 py-2"
+                          onPress={() => {
+                            const expression = stavka.krajnje_stanje || 'N/A';
+                            Alert.alert('Izraz', `Sabirak: ${expression}`);
+                          }}
+                        >
+                          {evaluateExpression(stavka.krajnje_stanje) || '0'}
+                        </Text>
+                        <Text className="w-32 text-center text-lg text-gray-700 py-2">
+                          {stavka.prodato || 'N/A'}
+                        </Text>
+                        <Text className="w-32 text-center text-lg text-gray-700 py-2">
+                          {matchingPice?.cena || 'N/A'}
+                        </Text>
+                        <Text className="w-32 text-center text-lg font-bold text-secondary py-2">
+                          {stavka.ukupno || 'N/A'} din
+                        </Text>
+                      </View>
+                    );
+                  })}
+                </View>
+              </ScrollView>
+            </View>
+          )}
 
         {selectedPopis && (
           <>
@@ -310,41 +390,89 @@ const VidiPopis = () => {
               <View className="flex flex-row border-b bg-secondary">
                 <Text className="flex-1 text-center text-red-600 font-bold text-xl py-2">Troškovi</Text>
               </View>
-              <View className="flex flex-row justify-center items-center border-b bg-secondary">
-                <Text className="flex-1 text-center text-white text-lg font-bold py-2">Wolt</Text>
-                <Text className="flex-1 text-center text-white text-lg font-bold py-2">Glovo</Text>
-                <Text className="flex-1 text-center text-white text-lg font-bold py-2">Sale</Text>
-                <Text className="flex-1 text-center text-white text-lg font-bold py-2">Kartice</Text>
-                <Text className="flex-1 text-center text-white text-lg font-bold py-2">Ostali Troškovi</Text>
-                <Text className="flex-1 text-center text-white text-lg font-bold py-2">Virmani</Text>
-                <Text className="flex-1 text-center text-white text-lg font-bold py-2">Ukupno</Text>
-              </View>
-              <View className="flex flex-row border-b">
-                <Text className="flex-1 text-center text-gray-700 text-lg py-2">{selectedPopis.wolt} din</Text>
-                <Text className="flex-1 text-center text-gray-700 text-lg py-2">{selectedPopis.glovo} din</Text>
-                <Text className="flex-1 text-center text-gray-700 text-lg py-2">{selectedPopis.sale} din</Text>
-                <Text className="flex-1 text-center text-gray-700 text-lg py-2">{selectedPopis.kartice} din</Text>
-                <Text className="flex-1 text-center text-gray-700 text-lg py-2"
-                onPress={() => {
-                  const expression = selectedPopis.ostalot || 'N/A';
-                  Alert.alert('Izraz', `Sabirak: ${expression}`);
-                }}
-                >
-                  {evaluateExpression(selectedPopis.ostalot)} din
-                  </Text>
-                <Text className="flex-1 text-center text-gray-700 text-lg py-2"
-                  onPress={() => {
-                    const expression = selectedPopis.virman || 'N/A';
-                    Alert.alert('Izraz', `Sabirak: ${expression}`);
-                  }}
-                >
-                  {evaluateExpression(selectedPopis.virman)} din
-                  </Text>
-                <Text className="flex-1 text-center font-bold text-secondary text-lg py-2">
-                  {(parseInt(selectedPopis.wolt) + parseInt(selectedPopis.glovo) + parseInt(selectedPopis.sale) + parseInt(selectedPopis.kartice) + parseInt(evaluateExpression(selectedPopis.ostalot)) + parseInt(evaluateExpression(selectedPopis.virman))).toFixed(2)} din
-                </Text>
-              </View>
-              {/* Description section for Troškovi */}
+
+              <ScrollView horizontal showsHorizontalScrollIndicator={true}>
+                <View>
+                  <View className="flex-row justify-center items-center border-b bg-secondary">
+                    <Text className="w-32 text-center text-white text-lg font-bold py-2">Wolt</Text>
+                    <Text className="w-32 text-center text-white text-lg font-bold py-2">Glovo</Text>
+                    <Text className="w-32 text-center text-white text-lg font-bold py-2">Sale</Text>
+                    <Text className="w-32 text-center text-white text-lg font-bold py-2">Kartice</Text>
+                    <Text className="w-32 text-center text-white text-lg font-bold py-2">Ostali Troškovi</Text>
+                    <Text className="w-32 text-center text-white text-lg font-bold py-2">Virmani</Text>
+                    <Text className="w-32 text-center text-white text-lg font-bold py-2">Ukupno</Text>
+                  </View>
+
+                  <View className="flex-row border-b">
+                    <Text 
+                      className="w-32 text-center text-gray-700 text-lg py-2"
+                      onPress={() => {
+                        const expression = selectedPopis.wolt || 'N/A';
+                        Alert.alert('Izraz', `Sabirak: ${expression}`);
+                      }}
+                    >
+                      {evaluateExpression(selectedPopis.wolt)} din
+                    </Text>
+                    <Text 
+                      className="w-32 text-center text-gray-700 text-lg py-2"
+                      onPress={() => {
+                        const expression = selectedPopis.glovo || 'N/A';
+                        Alert.alert('Izraz', `Sabirak: ${expression}`);
+                      }}
+                    >
+                      {evaluateExpression(selectedPopis.glovo)} din
+                    </Text>
+                    <Text 
+                      className="w-32 text-center text-gray-700 text-lg py-2"
+                      onPress={() => {
+                        const expression = selectedPopis.sale || 'N/A';
+                        Alert.alert('Izraz', `Sabirak: ${expression}`);
+                      }}
+                    >
+                      {evaluateExpression(selectedPopis.sale)} din
+                    </Text>
+                    <Text 
+                      className="w-32 text-center text-gray-700 text-lg py-2"
+                      onPress={() => {
+                        const expression = selectedPopis.kartice || 'N/A';
+                        Alert.alert('Izraz', `Sabirak: ${expression}`);
+                      }}
+                    >
+                      {evaluateExpression(selectedPopis.kartice)} din
+                    </Text>
+                    <Text 
+                      className="w-32 text-center text-gray-700 text-lg py-2"
+                      onPress={() => {
+                        const expression = selectedPopis.ostalot || 'N/A';
+                        Alert.alert('Izraz', `Sabirak: ${expression}`);
+                      }}
+                    >
+                      {evaluateExpression(selectedPopis.ostalot)} din
+                    </Text>
+                    <Text 
+                      className="w-32 text-center text-gray-700 text-lg py-2"
+                      onPress={() => {
+                        const expression = selectedPopis.virman || 'N/A';
+                        Alert.alert('Izraz', `Sabirak: ${expression}`);
+                      }}
+                    >
+                      {evaluateExpression(selectedPopis.virman)} din
+                    </Text>
+                    <Text className="w-32 text-center font-bold text-secondary text-lg py-2">
+                      {(
+                        parseFloat(evaluateExpression(selectedPopis.wolt)) +
+                        parseFloat(evaluateExpression(selectedPopis.glovo)) +
+                        parseFloat(evaluateExpression(selectedPopis.sale)) +
+                        parseFloat(evaluateExpression(selectedPopis.kartice)) +
+                        parseInt(evaluateExpression(selectedPopis.ostalot)) +
+                        parseInt(evaluateExpression(selectedPopis.virman))
+                      ).toFixed(2)} din
+                    </Text>
+                  </View>
+                </View>
+              </ScrollView>
+
+              {/* Description section for Troškovi - Unchanged */}
               <View className="flex flex-col">
                 <View className="flex flex-row bg-gray-100">
                   <Text className="flex-1 text-center font-bold text-gray-600 text-lg py-2">Opis Ostalih Troškova</Text>
@@ -355,36 +483,35 @@ const VidiPopis = () => {
                   <Text className="flex-1 text-center text-gray-700 text-lg py-2">{selectedPopis.virmanOpis || 'N/A'}</Text>
                 </View>
               </View>
-              
             </View>
+
             <View className="flex flex-row justify-center rounded-lg bg-white mt-4">
-                  <Text className="text-2xl font-bold text-right">
-                    Piće:{" "}
-                    {dataStavka
-                      .reduce((sum, stavka) => sum + parseFloat(stavka.ukupno), 0)
-                      .toFixed(2)}{" "}
-                    din
-                    {"   "}
-                    <Text className="text-green-600 font-bold">
-                    Za predaju:{" "}
-                    {(
-                      dataStavka.reduce((sum, stavka) => sum + parseFloat(stavka.ukupno || "0"), 0) +
-                      parseFloat(selectedPopis.kuhinja || "0") +
-                      parseFloat(selectedPopis.kuhinjaSt || "0") +
-                      parseFloat(evaluateExpression(selectedPopis.ostalop) || "0") -
-                      (parseFloat(selectedPopis.wolt || "0") +
-                        parseFloat(selectedPopis.glovo || "0") +
-                        parseFloat(selectedPopis.sale || "0") +
-                        parseFloat(selectedPopis.kartice || "0") +
-                        parseFloat(evaluateExpression(selectedPopis.ostalot) || "0") +
-                        parseFloat(evaluateExpression(selectedPopis.virman) || "0"))
-                    ).toFixed(2)} din
-                    </Text>
-                  </Text>
-                </View>
+              <Text className="text-2xl font-bold text-right">
+                Piće:{" "}
+                {dataStavka
+                  .reduce((sum, stavka) => sum + parseFloat(stavka.ukupno), 0)
+                  .toFixed(2)}{" "}
+                din
+                {"   "}
+                <Text className="text-green-600 font-bold">
+                  Za predaju:{" "}
+                  {(
+                    dataStavka.reduce((sum, stavka) => sum + parseFloat(stavka.ukupno || "0"), 0) +
+                    parseFloat(selectedPopis.kuhinja || "0") +
+                    parseFloat(selectedPopis.kuhinjaSt || "0") +
+                    parseFloat(evaluateExpression(selectedPopis.ostalop) || "0") -
+                    (parseFloat(evaluateExpression(selectedPopis.wolt) || "0") +
+                    parseFloat(evaluateExpression(selectedPopis.glovo) || "0") +
+                    parseFloat(evaluateExpression(selectedPopis.sale) || "0") +
+                    parseFloat(evaluateExpression(selectedPopis.kartice) || "0") +
+                    parseFloat(evaluateExpression(selectedPopis.ostalot) || "0") +
+                    parseFloat(evaluateExpression(selectedPopis.virman) || "0"))
+                  ).toFixed(2)} din
+                </Text>
+              </Text>
+            </View>
           </>
         )}
-
         </View>
       </ScrollView>
     </SafeAreaView>

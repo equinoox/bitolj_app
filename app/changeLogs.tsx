@@ -1,5 +1,5 @@
 import React from 'react'
-import { Text, View, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native'
+import { Text, View, SafeAreaView, ScrollView } from 'react-native'
 import { useState, useCallback } from 'react'
 import { useSQLiteContext } from 'expo-sqlite';
 import { useFocusEffect } from 'expo-router';
@@ -15,7 +15,8 @@ const changeLogs = () => {
             `SELECT ch.id, 
                     k.ime AS korisnik_name,
                     k.prezime AS korisnik_surname,
-                    p.naziv AS pice_name, 
+                    p.naziv AS pice_name,
+                    ch.column,
                     ch.old_value, 
                     ch.new_value, 
                     ch.timestamp 
@@ -45,6 +46,7 @@ const changeLogs = () => {
         <View className="flex-row items-center border-b-2 border-black pb-2 mb-2">
             <Text className="text-lg font-bold flex-1 text-center">Korisnik</Text>
             <Text className="text-lg font-bold flex-1 text-center">Piće</Text>
+            <Text className="text-lg font-bold flex-1 text-center">Kolona</Text>
             <Text className="text-lg font-bold flex-1 text-center">Stara Vrednost</Text>
             <Text className="text-lg font-bold flex-1 text-center">Nova Vrednost</Text>
             <Text className="text-lg font-bold flex-1 text-center">Vreme</Text>
@@ -58,6 +60,7 @@ const changeLogs = () => {
             >
             <Text className="flex-1 text-center">{item.korisnik_name}  {item.korisnik_surname}</Text>
             <Text className="flex-1 text-center">{item.pice_name}</Text>
+            <Text className="flex-1 text-center">{item.column}</Text>
             <Text className="flex-1 text-center">{item.old_value}</Text>
             <Text className="flex-1 text-center">{item.new_value}</Text>
             <Text className="flex-1 text-center">{item.timestamp}</Text>
