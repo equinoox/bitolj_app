@@ -164,35 +164,6 @@ const VidiPopis = () => {
     dataStavka: Stavka_Popisa[];
   }
 
-  // const handlePDFPrint = async ({ selectedPopis, dataStavka, dataPice }: {
-  //   selectedPopis: Popis | null;
-  //   dataStavka: Stavka_Popisa[];
-  //   dataPice: Pice[];
-  // }) => {
-
-  //   if (!selectedPopis) {
-  //     console.warn('No popis selected');
-  //     return;
-  //   }
-  
-  //   try {
-  //     const title = `Popis ${selectedPopis.datum} - Smena ${selectedPopis.smena}`;
-  //     console.log("Ulazi")
-
-  //     return (
-  //       <PdfGenerator
-  //         title={title}
-  //         dataStavka={dataStavka}
-  //         dataPopis={selectedPopis}
-  //         dataPice={dataPice}
-  //       />
-  //     );
-  
-  //   } catch (error) {
-  //     console.error('Error generating PDF:', error);
-  //   }
-  // };
-
   useFocusEffect(
     useCallback(() => {
       loadData();

@@ -1,14 +1,16 @@
 import { addAdmin, createTables, rollbackTables } from '../database/controller/dbController';
 import { AuthProvider } from '../contexts/AuthContext';
 import { SQLiteDatabase, SQLiteProvider } from 'expo-sqlite';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as FileSystem from 'expo-file-system';
 import { Stack } from 'expo-router'
 import { Suspense } from 'react';
 import Fallback from '@/components/Fallback';
+import { useEffect, useState } from 'react';
 import "../global.css";
 
-
 const RootLayout = () => {
-
+  
   const createDbIfNeeded = async (db: SQLiteDatabase) => {
     try {
       await createTables(db);
@@ -18,16 +20,16 @@ const RootLayout = () => {
       console.log(error);
     }
   }
-
   return (
     <Suspense fallback={<Fallback/>}>
       <AuthProvider>
-          <SQLiteProvider databaseName='bitolj.db' onInit={createDbIfNeeded}>
+          <SQLiteProvider databaseName="bitolj.db" onInit={createDbIfNeeded}>
             <Stack >
                 <Stack.Screen name='index' options={{ headerShown: false }}/>
                 <Stack.Screen name='(auth)' options={{ headerShown: false }}/>
                 <Stack.Screen name='(tabs)' options={{ headerShown: false }}/>
                 <Stack.Screen name='changeLogs' options={{ presentation: "modal", title: "Istorija Promena" }}/>
+                <Stack.Screen name='db_manager' options={{ presentation: "modal", title: "Upravljanje Bazom" }}/>
                 <Stack.Screen name='pice/getPice' options={{ presentation: "modal", title: "Promeni/Obriši Piće" }}/>
                 <Stack.Screen name='pice/addPice' options={{ presentation: "modal", title: "Dodaj Piće" }}/>
                 <Stack.Screen name='pice/listPice' options={{ presentation: "modal", title: "Lista Pića" }}/>

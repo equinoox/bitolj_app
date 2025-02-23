@@ -1,10 +1,12 @@
 import React from 'react'
 import { router } from 'expo-router';
-import { View, Text, ScrollView, TouchableOpacity, Alert, TextInput, BackHandler  } from 'react-native'
+import { View, Text, ScrollView, TouchableOpacity, Alert, TextInput } from 'react-native'
 import { Picker } from '@react-native-picker/picker';
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { FontAwesome5, MaterialIcons, AntDesign } from '@expo/vector-icons';
+import { FontAwesome5, MaterialIcons, AntDesign, Fontisto } from '@expo/vector-icons';
 import { useAuth } from '../../contexts/AuthContext';
+import * as Sharing from 'expo-sharing';
+import * as FileSystem from 'expo-file-system';
 import { useState, useCallback, useEffect } from 'react'
 import { useSQLiteContext } from 'expo-sqlite';
 import { useFocusEffect } from 'expo-router';
@@ -521,12 +523,23 @@ const opcijePopis = () => {
       <ScrollView contentContainerStyle={{flexGrow: 1}}>
       <View className="flex bg-secondary rounded-3xl m-4 p-4">
           {/* Logout Button */}
-          <TouchableOpacity
+          {userData?.role === "admin" ? (
+            <>
+            <TouchableOpacity
             className="absolute top-4 right-4 bg-secondary rounded-md items-center"
             onPress={logoutConfirm}
-          >
-            <AntDesign name="logout" size={42} color="#AA0000" />
-          </TouchableOpacity>
+            >
+              <AntDesign name="logout" size={42} color="#AA0000" />
+            </TouchableOpacity>
+            </>
+          ) : (
+            <TouchableOpacity
+            className="absolute top-4 right-4 bg-secondary rounded-md items-center"
+            onPress={logoutConfirm}
+            >
+              <AntDesign name="logout" size={46} color="#AA0000" />
+            </TouchableOpacity>
+          )}
 
           {/* Icon and Info Row */}
           <View className="flex flex-row items-center justify-evenly">

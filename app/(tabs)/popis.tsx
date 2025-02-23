@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, TextInput, TouchableOpacity, Alert } from 'react-native'
+import { View, Text, ScrollView, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native'
 import { router } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
 import { useState, useCallback, useEffect } from 'react'
@@ -17,7 +17,7 @@ import React from 'react'
 const Popis = () => {
 
   // LOGIN & LOGOUT
-  // ================================================================================================================
+  // ===============================================  =================================================================
   // ================================================================================================================
   const { userData, setUserData } = useAuth();
   const logoutConfirm = () => {
@@ -37,7 +37,7 @@ const Popis = () => {
     }
   };
 
-  
+  const [isLoading, setIsLoading] = useState(true);
 
 
   // ================================================================================================================
@@ -244,6 +244,14 @@ const Popis = () => {
   // ================================================================================================================
   // ================================================================================================================
   const [appWasLeft, setAppWasLeft] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   // Load saved inputValues from AsyncStorage on mount
   useEffect(() => {
@@ -765,6 +773,14 @@ const Popis = () => {
 
   // ================================================================================================================
   // ================================================================================================================
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+        <ActivityIndicator size="large" color="#FFA001" />
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1">
