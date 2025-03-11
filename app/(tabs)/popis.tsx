@@ -6,7 +6,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { FontAwesome5, MaterialIcons, AntDesign } from '@expo/vector-icons';
+import { FontAwesome5, MaterialIcons, AntDesign, Entypo } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import DialogModal from '@/components/DialogModal';
@@ -250,7 +250,7 @@ const Popis = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 2000);
+    }, 1000);
 
     return () => clearTimeout(timer);
   }, []);
@@ -421,6 +421,7 @@ const Popis = () => {
     const filteredText = text.replace(/[^0-9-]/g, '');
     setOtherInputs(prev => ({ ...prev, datum: filteredText }));
   };
+
 
   // ================================================================================================================
   // ================================================================================================================
@@ -889,6 +890,12 @@ const Popis = () => {
                 const prodato_other = (kraj - pocetak);
                 const ukupno_other = prodato_other * parseFloat(item.cena);
 
+                const copyPocetakToKraj = () => {
+                  const pocetakValue = inputValues[item.id_pice]?.pocetak || '0';
+                  handleInputChange(item.id_pice, "kraj", pocetakValue);
+                  handleBlur(item, pocetakValue, "Kraj");
+                };
+
                 return (
                   <View key={item.id_pice} className={`flex-row items-center border-b py-2`}>
                     {/* Naziv */}
@@ -896,16 +903,32 @@ const Popis = () => {
 
                     {/* Početak Input */}
                     {userData?.role === "admin" || userData?.role === "manager" ? (
+                    <View className="w-24 h-11 flex-row items-center">
                       <TextInput
-                        className="w-24 text-center border border-gray-400 rounded-md px-2 py-2 text-lg bg-gray-100"
+                        className="flex-1 text-center border border-gray-400 rounded-l-md px-2 py-2 text-lg bg-gray-100"
                         keyboardType="number-pad"
                         placeholder="0"
                         value={inputValues[item.id_pice]?.pocetak}
                         onChangeText={(value) => handleInputChange(item.id_pice, "pocetak", value)}
                         onBlur={() => handleBlur(item, inputValues[item.id_pice]?.pocetak, "Početak")}
                       />
+                      <TouchableOpacity 
+                        className="h-full border border-l-0 border-gray-400 rounded-r-md px-1 bg-gray-200 justify-center"
+                        onPress={copyPocetakToKraj}
+                      >
+                        <Entypo name="triangle-right" size={12} color="black"/>
+                      </TouchableOpacity>
+                    </View>
                     ) : (
-                      <Text className="w-24 text-center text-lg">{inputValues[item.id_pice]?.pocetak || "0"}</Text>
+                      <View className="w-24 h-11 flex-row items-center">
+                      <Text className="flex-1 text-center text-lg">{inputValues[item.id_pice]?.pocetak || "0"}</Text>
+                      <TouchableOpacity 
+                        className="h-full border border-gray-400 rounded-md px-1 bg-gray-200 justify-center items-center"
+                        onPress={copyPocetakToKraj}
+                      >
+                        <Entypo name="triangle-right" size={12} color="black" />
+                      </TouchableOpacity>
+                    </View>
                     )}
 
                     {/* Uneto Input */}
