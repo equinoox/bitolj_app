@@ -290,8 +290,13 @@ const VidiPopis = () => {
                         <Text className="w-32 text-center text-lg text-gray-700 py-2">
                           {stavka.pocetno_stanje || 'N/A'}
                         </Text>
-                        <Text className="w-32 text-center text-lg text-gray-700 py-2">
-                          {stavka.uneto || 'N/A'}
+                        <Text 
+                          className="w-32 text-center text-lg text-gray-700 py-2"
+                          onPress={() => {
+                            const expression = stavka.uneto || 'N/A';
+                            Alert.alert('Izraz', `Sabirak: ${expression}`);
+                          }}>
+                          {evaluateExpression(stavka.uneto) || 'N/A'}
                         </Text>
                         <Text
                           className="w-32 text-center text-lg text-gray-700 py-2"

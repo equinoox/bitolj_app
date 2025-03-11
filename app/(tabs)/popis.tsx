@@ -7,6 +7,7 @@ import { useSQLiteContext } from 'expo-sqlite';
 import { useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { FontAwesome5, MaterialIcons, AntDesign } from '@expo/vector-icons';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import DialogModal from '@/components/DialogModal';
 import DialogModalN from '@/components/DialogModalN';
@@ -105,7 +106,7 @@ const Popis = () => {
   }
 
   interface OtherInputs {
-    datum: string; ukupnoAll: string; smena:string
+    datum: Date; ukupnoAll: string; smena:string
   }
 
   type InputValues = {
@@ -154,9 +155,10 @@ const Popis = () => {
   });
   
   const [otherInputs, setOtherInputs] = useState({
-    datum: new Date().toLocaleString("en-GB", { timeZone: "Europe/Belgrade" }),
+    datum: new Date().toISOString().split('T')[0],
     smena: ''
   })
+
   
   const [inputValues, setInputValues] = useState<InputValues>({});
 
@@ -369,11 +371,13 @@ const Popis = () => {
   const [oldValueUneto, setOldValueUneto] = useState<{ [key: number]: number }>({});
 
   const handleBlur = (item: Pice, currentValue: string, column: string) => {
-    // console.log("handleBlur called with:", { currentValue, column });
+    console.log("handleBlur called with:", { currentValue, column });
     
     const id_pice = item.id_pice;
-    const numericValue = parseFloat(currentValue) || 0;
-    // console.log("numericValue:", numericValue);
+    
+    const expressionValue = evaluateExpression(currentValue) || "";
+    const numericValue = parseFloat(expressionValue)
+    console.log("numericValue:", numericValue);
     
     let previousValue;
     let setOldValueFunction;
@@ -408,8 +412,14 @@ const Popis = () => {
         [id_pice]: numericValue
       }));
     } else {
-      console.log("No change detected or userData is missing.");
+      // console.log("No change detected or userData is missing.");
     }
+  };
+
+  const handleDateChange = (text: string) => {
+    // Allow only numbers and '-'
+    const filteredText = text.replace(/[^0-9-]/g, '');
+    setOtherInputs(prev => ({ ...prev, datum: filteredText }));
   };
 
   // ================================================================================================================
@@ -447,6 +457,16 @@ const Popis = () => {
     if (!expression) return 0;
     const numbers = expression.split('+').map(Number);
     return numbers.reduce((acc, num) => acc + num, 0);
+  };
+
+  const calculateEx = (expression: string): number => {
+    if (!expression) return 0;
+  
+    const numbers = expression.match(/-?\d+/g);
+  
+    if (!numbers) return 0;
+  
+    return numbers.map(Number).reduce((acc, num) => acc + num, 0);
   };
 
   const calculateTotalSum = () => {
@@ -570,9 +590,13 @@ const Popis = () => {
     if (!otherInputs.smena) {
       errors.push('Morate izabrati smenu (prva ili druga).');
     }
+
+    if (!otherInputs.datum || !/^\d{4}-\d{2}-\d{2}$/.test(otherInputs.datum)) {
+      errors.push('Nepravilan format datuma.');
+    }
   
     if (otherInputs.smena) {
-      const today = new Date().toISOString().split('T')[0];
+      const today = otherInputs.datum;
       const existingPopis = await checkExistingPopis(today, otherInputs.smena);
   
       if (existingPopis) {
@@ -683,7 +707,7 @@ const Popis = () => {
             virmanOpis, smena, id_korisnik
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
         `, [
-          new Date().toISOString().split('T')[0], PTInptus.kuhinja || "0", PTInptus.ks || "0", PTInptus.ostalop || "0",
+          otherInputs.datum, PTInptus.kuhinja || "0", PTInptus.ks || "0", PTInptus.ostalop || "0",
           PTInptus.ostalopOpis, PTInptus.wolt || "0", PTInptus.glovo || "0", PTInptus.kartice || "0",
           PTInptus.sale || "0", PTInptus.ostalot || "0", PTInptus.ostalotOpis, PTInptus.virman || "0",
           PTInptus.virmanOpis, otherInputs.smena, Number(userData?.id_korisnik)
@@ -697,10 +721,10 @@ const Popis = () => {
           if (!inputValue) continue;
   
           const pocetak = parseFloat(inputValue.pocetak || '0');
-          const uneto = parseFloat(inputValue.uneto || '0');
+          const uneto = inputValue.uneto || '0';
           const kraj_string = inputValue.kraj || '0'
           const kraj = calculateSum(inputValue.kraj || '0');
-          let prodato = (uneto + pocetak) - kraj;
+          let prodato = (parseFloat(evaluateExpression(uneto)) + pocetak) - kraj;
           let ukupno = prodato * parseFloat(item.cena);
 
           const prodato_other = (kraj - pocetak);
@@ -712,7 +736,7 @@ const Popis = () => {
             prodato = prodato_other; 
             ukupno = ukupno_other;
           } else {
-            prodato = (uneto + pocetak) - kraj;
+            prodato = (parseFloat(evaluateExpression(uneto)) + pocetak) - kraj;
             ukupno = prodato * parseFloat(item.cena);
           }
   
@@ -858,9 +882,9 @@ const Popis = () => {
               {/* Table Rows */}
               {piceData.filter((item) => item.type === type).map((item) => {
                 const pocetak = parseFloat(inputValues[item.id_pice]?.pocetak || '0');
-                const uneto = parseFloat(inputValues[item.id_pice]?.uneto || '0');
+                const uneto = inputValues[item.id_pice]?.uneto || '0';
                 const kraj = calculateSum(inputValues[item.id_pice]?.kraj || '0');
-                const prodato = (uneto + pocetak) - kraj;
+                const prodato = (parseFloat(evaluateExpression(uneto)) + pocetak) - kraj;
                 const ukupno = prodato * parseFloat(item.cena);
                 const prodato_other = (kraj - pocetak);
                 const ukupno_other = prodato_other * parseFloat(item.cena);
@@ -893,20 +917,21 @@ const Popis = () => {
                           className="w-24 text-center border border-gray-400 rounded-md px-2 py-2 text-lg bg-gray-100 justify-center items-center"
                           onPress={() => handleDialogPressN(item.id_pice)}
                         >
-                          <Text className="text-lg">{(inputValues[item.id_pice]?.uneto || '0').toString()}</Text>
+                          {/* Display the raw expression as stored */}
+                          <Text className="text-lg">
+                            {calculateEx(inputValues[item.id_pice]?.uneto || '0').toString()}
+                          </Text>
                         </TouchableOpacity>
-
+                        
                         <DialogModalN
                           visible={modalVisibleN && currentIdN === item.id_pice}
                           onClose={() => {
                             setModalVisibleN(false);
-                            // Get the current value from inputValues instead of using a local value
                             const currentValue = inputValues[item.id_pice]?.uneto || '0';
                             handleBlur(item, currentValue, 'Uneto');
                           }}
                           onConfirm={(value) => {
                             handleDialogConfirmN(value);
-                            // Call handleBlur with the new value immediately after confirming
                             handleBlur(item, value, 'Uneto');
                           }}
                           initialValue={inputValues[item.id_pice]?.uneto || ''}
@@ -1179,16 +1204,17 @@ const Popis = () => {
       </View>
 
       <View className="m-4 mt-2 bg-primary rounded-lg p-4">
-      <View className="mb-4 flex-row items-center justify-between">
-        <TouchableOpacity 
-          className="w-7/12 bg-orange py-4 rounded-lg"
-          onPress={popisConfirm}
-        >
-          <Text className="text-black text-center text-lg font-bold">
-            Završi Popis
-          </Text>
-        </TouchableOpacity>
-          <View className="w-2/6  bg-white rounded-lg border border-gray-300">
+        {/* First row with button and picker */}
+        <View className="mb-4 flex-row items-center justify-between">
+          <TouchableOpacity
+            className="w-7/12 bg-orange py-4 rounded-lg"
+            onPress={popisConfirm}
+          >
+            <Text className="text-black text-center text-lg font-bold">
+              Završi Popis
+            </Text>
+          </TouchableOpacity>
+          <View className="w-2/6 bg-white rounded-lg border border-gray-300">
             <Picker
               selectedValue={otherInputs.smena}
               onValueChange={(itemValue) =>
@@ -1196,31 +1222,51 @@ const Popis = () => {
               }
               className="h-12"
             >
-              <Picker.Item label= "[Smena]" enabled={false} value="" style={{ color: 'black' }}/>
-              <Picker.Item label="Prva smena" value="prva" enabled={prvaSmenaEnabled}  style={{ color: prvaSmenaEnabled ? 'black' : 'gray' }}/> 
-              <Picker.Item label="Druga smena" value="druga" enabled={drugaSmenaEnabled}  style={{ color: drugaSmenaEnabled ? 'black' : 'gray' }} />
+              <Picker.Item label="[Smena]" enabled={false} value="" style={{ color: 'black' }}/>
+              <Picker.Item label="Prva smena" value="prva"/>
+              <Picker.Item label="Druga smena" value="druga"/>
             </Picker>
           </View>
       </View>
-        <View className="space-y-4">
-          {/* Pazar Row */}
-          <View className="flex flex-row justify-between items-center border-b border-gray-300 pb-2">
-            <Text className="text-lg font-bold">Piće:</Text>
-            <Text className="text-lg">
-            {Math.max(0, parseFloat(calculateTotalSum().toFixed(2))).toString()} RSD
-            </Text>
-          </View>
-          
-          {/* Prihodi Row */}
-          <View className="flex flex-row justify-between items-center border-b border-gray-300 pb-2">
-            <Text className="text-lg font-bold">Prihodi:</Text>
-            <Text className="text-lg">
-              {((
-                parseInt(PTInptus.kuhinja || "0") + 
-                parseInt(PTInptus.ks || "0") + 
-                parseInt(evaluateExpression(PTInptus.ostalop) || "0")
-              ).toFixed(2))} RSD
-            </Text>
+      {userData?.role === "admin" && (
+      <View className="mb-4 bg-white rounded-lg border border-gray-300 w-full">
+          <TextInput
+            placeholder="Unesi datum (YYYY-MM-DD)"
+            value={otherInputs.datum}
+            onChangeText={handleDateChange}
+            className="h-12 px-3 text-black text-center"
+            keyboardType="default"
+            maxLength={10}
+            onBlur={() => {
+              const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+              if (otherInputs.datum && !dateRegex.test(otherInputs.datum)) {
+                Alert.alert('Date Error', 'Morate koristiti format: YYYY-MM-DD (Na primer: 2002-05-28)');
+                setOtherInputs(prev => ({ ...prev, datum: new Date().toISOString().split('T')[0] }));
+              }
+            }}
+          />
+        </View>
+      )}
+
+          <View className="space-y-4">
+            {/* Pazar Row */}
+            <View className="flex flex-row justify-between items-center border-b border-gray-300 pb-2">
+              <Text className="text-lg font-bold">Piće:</Text>
+              <Text className="text-lg">
+              {Math.max(0, parseFloat(calculateTotalSum().toFixed(2))).toString()} RSD
+              </Text>
+            </View>
+            
+            {/* Prihodi Row */}
+            <View className="flex flex-row justify-between items-center border-b border-gray-300 pb-2">
+              <Text className="text-lg font-bold">Prihodi:</Text>
+              <Text className="text-lg">
+                {((
+                  parseInt(PTInptus.kuhinja || "0") + 
+                  parseInt(PTInptus.ks || "0") + 
+                  parseInt(evaluateExpression(PTInptus.ostalop) || "0")
+                ).toFixed(2))} RSD
+              </Text>
           </View>
           
           {/* Troškovi Row */}

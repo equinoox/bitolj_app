@@ -65,60 +65,54 @@ interface PdfGeneratorProps {
     <head>
       <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
       <style>
-        /* Define A4 page size */
         @page {
           size: A4;
-          margin: 20mm; /* Standard margin for A4 */
+          margin: 15mm;
         }
   
         body {
           font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
           padding: 0;
           margin: 0;
-          width: 210mm; /* A4 width */
-          height: 297mm; /* A4 height */
+          width: 210mm;
+          height: 297mm;
           box-sizing: border-box;
+          font-size: 12px;
+          color: black;
         }
   
         .title {
           text-align: center;
-          font-size: 24px;
-          margin-bottom: 15px;
-          color: black;
+          font-size: 18px;
+          margin-bottom: 8px;
         }
   
-        .title-line {
-          font-size: 18px;
-          margin: 5px 0;
-          color: #333;
+        .info-line {
           text-align: center;
+          margin-bottom: 10px;
         }
   
         .table-title {
           text-align: center;
-          font-size: 20px; 
-          margin-top: 20px;
-          margin-bottom: 10px;
-          color: black;
+          font-size: 14px;
+          margin: 12px 0 6px;
+          font-weight: bold;
         }
   
         table {
           width: 100%;
           border-collapse: collapse;
-          margin: 10px 0;
-          box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+          margin: 6px 0;
         }
   
         th, td {
           border: 1px solid #ddd;
-          padding: 8px;
+          padding: 4px;
           text-align: center;
-          font-size: 14px;
+          font-size: 11px;
         }
   
         th {
-          background-color: black;
-          color: white;
           font-weight: bold;
         }
   
@@ -126,52 +120,41 @@ interface PdfGeneratorProps {
           background-color: #f9f9f9;
         }
   
-        tr:hover {
-          background-color: #f1f1f1;
-        }
-  
         .date {
           text-align: right;
-          color: #666;
-          font-size: 12px;
-          margin-bottom: 15px;
+          font-size: 10px;
+          margin-bottom: 10px;
         }
   
         .total {
           font-weight: bold;
-          color: black;
         }
   
         .description {
-          margin-top: 25px;
-          font-size: 14px;
-          color: #555;
+          margin-top: 15px;
+          font-size: 11px;
         }
   
         .bottom-container {
           display: flex;
           justify-content: center;
-          align-items: center;
-          margin-top: 20px;
-          gap: 20px;
+          gap: 15px;
+          margin-top: 15px;
         }
   
         .bottom-field {
-          font-size: 24px;
+          font-size: 14px;
           font-weight: bold;
         }
-
       </style>
     </head>
     <body>
       <div class="date">${new Date().toLocaleDateString()}</div>
       <div class="title">Pregled Popisa</div>
-      <div class="title-line">ID Popisa: ${dataPopis.id_popis}</div>
-      <div class="title-line">Datum Popisa: ${dataPopis.datum}</div>
-      <div class="title-line">Smena Popisa: ${dataPopis.smena === "prva" ? "Prva" : "Druga"}</div>
-      <div class="title-line">Korisnik: ${title}</div>
-      
-      <!-- First Table: Stavke Popisa -->
+      <div class="info-line">
+        ID Popisa: ${dataPopis.id_popis} | Datum Popisa: ${dataPopis.datum} | Smena: ${dataPopis.smena === "prva" ? "Prva" : "Druga"} | Korisnik: ${title}
+      </div>
+  
       <div class="table-title">Stavke Popisa</div>
       <table>
         <thead>
@@ -203,7 +186,6 @@ interface PdfGeneratorProps {
         </tbody>
       </table>
   
-      <!-- Second Table: Prihodi -->
       <div class="table-title">Prihodi</div>
       <table>
         <thead>
@@ -219,23 +201,21 @@ interface PdfGeneratorProps {
             <td>${dataPopis.kuhinja || '0'}</td>
             <td>${dataPopis.kuhinjaSt || '0'}</td>
             <td>${dataPopis.ostalop || '0'}</td>
-            <td class="total">
-              ${(
+            <td class="total">${
+              (
                 parseFloat(dataPopis.kuhinja || '0') +
                 parseFloat(dataPopis.kuhinjaSt || '0') +
                 parseFloat(evaluateExpression(dataPopis.ostalop) || '0')
-              )} din
-            </td>
+              ).toFixed(2)
+            } din</td>
           </tr>
         </tbody>
       </table>
   
-      <!-- Description for Ostali Prihodi Opis -->
       <div class="description">
         <strong>Ostali Prihodi Opis:</strong> ${dataPopis.ostalopOpis || 'N/A'}
       </div>
   
-      <!-- Third Table: Troškovi -->
       <div class="table-title">Troškovi</div>
       <table>
         <thead>
@@ -257,31 +237,28 @@ interface PdfGeneratorProps {
             <td>${dataPopis.kartice || '0'}</td>
             <td>${dataPopis.ostalot || '0'}</td>
             <td>${dataPopis.virman || '0'}</td>
-            <td class="total">
-              ${(
+            <td class="total">${
+              (
                 parseFloat(evaluateExpression(dataPopis.wolt) || '0') +
                 parseFloat(evaluateExpression(dataPopis.glovo) || '0') +
                 parseFloat(evaluateExpression(dataPopis.sale) || '0') +
                 parseFloat(evaluateExpression(dataPopis.kartice) || '0') +
                 parseFloat(evaluateExpression(dataPopis.ostalot) || '0') +
                 parseFloat(evaluateExpression(dataPopis.virman) || '0')
-              )} din
-            </td>
+              ).toFixed(2)
+            } din</td>
           </tr>
         </tbody>
       </table>
   
-      <!-- Description for Ostali Troskovi Opis -->
       <div class="description">
         <strong>Ostali Troškovi Opis:</strong> ${dataPopis.ostalotOpis || 'N/A'}
       </div>
   
-      <!-- Description for Virmani Opis -->
       <div class="description">
         <strong>Virmani Opis:</strong> ${dataPopis.virmanOpis || 'N/A'}
       </div>
   
-      <!-- Bottom Fields -->
       <div class="bottom-container">
         <div class="bottom-field">
           <strong>Piće:</strong> ${dataStavka.reduce((sum, stavka) => sum + parseFloat(stavka.ukupno || '0'), 0)} din
@@ -304,8 +281,8 @@ interface PdfGeneratorProps {
         </div>
       </div>
     </body>
-  </html>
-  `;
+  </html>`;
+  
 
 const PdfGenerator: React.FC<PdfGeneratorProps> = ({ 
     title = "Inventory Report", 

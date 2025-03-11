@@ -48,7 +48,7 @@ const App = () => {
           <FontAwesome5 name="database" size={20} color="#FFA001" />
           <Text className="text-white text-cener text-lg font-bold ml-2">Database Options</Text>
         </TouchableOpacity>
-
+        
         <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
           <View className="w-full items-center px-4 py-8 flex-1 mt-36">
             {/* Header Image */}
@@ -72,6 +72,7 @@ const App = () => {
             >
               <Text className="text-black text-2xl font-bold">Nastavi</Text>
             </TouchableOpacity>
+            <Text className="text-white text-center text-md mt-2">Version: 1.1.9</Text>
           </View>
 
           {/* Footer */}

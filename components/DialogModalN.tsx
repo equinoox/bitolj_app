@@ -2,60 +2,103 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Modal, StyleSheet, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard, ScrollView } from 'react-native';
 
 
-interface DialogModalProps {
+interface DialogModalNProps {
   visible: boolean;
   onClose: () => void;
   onConfirm: (value: string) => void;
   initialValue: string;
 }
 
-const DialogModal: React.FC<DialogModalProps> = ({ visible, onClose, onConfirm, initialValue }) => {
+const DialogModalN: React.FC<DialogModalNProps> = ({ visible, onClose, onConfirm, initialValue }) => {
   const [input, setInput] = useState<string>(initialValue || '');
-
-  const handleN = () => {
+  
+  const handleAdd = () => {
+    setInput((prev) => `${prev}+`);
+  };
+  
+  const handleSubtract = () => {
     setInput((prev) => `${prev}-`);
   };
-
+  
   const handleConfirm = () => {
     if (validateInput(input)) {
+      // Just pass the raw expression
       onConfirm(input);
       onClose();
     }
   };
-
+  
   const validateInput = (value: string): boolean => {
-    const regex = /^-?\d+$/;
+    // Allow expressions with + and - operations
+    const regex = /^-?\d+(?:[+-]\d+)*$/;
     return regex.test(value);
   };
-
-
+  
+  // We'll still show the evaluated result in the modal for user feedback,
+  // but we won't store it separately
+  const evaluateExpression = (expr: string): string => {
+    try {
+      if (!expr) return "0";
+      
+      if (validateInput(expr)) {
+        // Replace all occurrences of "-" with "+-" to handle subtraction
+        // But first handle the case where the expression starts with "-"
+        let normalizedExpr = expr;
+        if (normalizedExpr.startsWith('-')) {
+          normalizedExpr = '0' + normalizedExpr;
+        }
+        
+        normalizedExpr = normalizedExpr.replace(/-/g, '+-');
+        
+        // Split by "+" and handle the empty strings that might result from "+-" replacements
+        const parts = normalizedExpr.split('+');
+        const result = parts
+          .filter(part => part !== '')
+          .map(num => parseInt(num, 10))
+          .reduce((sum, num) => sum + num, 0);
+        
+        return result.toString();
+      }
+      return expr;
+    } catch {
+      return expr;
+    }
+  };
+  
   return (
     <Modal visible={visible} transparent animationType="fade">
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <View style={styles.modalContainer}>
           <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.modalContent}>
             <Text style={styles.title}>UNESITE VREDNOSTI</Text>
-
-            <Text style={styles.warningText}>
-                Upozorenje!{"\n"}
-                Negativne vrednosti unosite samo u slučaju nedostatka pića.
+            
+            <Text style={styles.evaluatedText}>
+              Vrednost: {evaluateExpression(input)}
             </Text>
-
+            
             <TextInput
               style={styles.input}
               value={input}
               onChangeText={setInput}
               keyboardType="number-pad"
-              placeholder="Unesite vrednost..."
+              placeholder="Unesite vrednosti..."
               autoFocus
             />
-
+            
             <View style={styles.inlineButtons}>
-              <TouchableOpacity style={styles.addButton} onPress={handleN} activeOpacity={0.7}>
+              <TouchableOpacity style={styles.addButton} onPress={handleAdd} activeOpacity={0.7}>
+                <Text style={styles.addButtonText}>+</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.minusButton} onPress={handleSubtract} activeOpacity={0.7}>
                 <Text style={styles.addButtonText}>-</Text>
               </TouchableOpacity>
             </View>
-
+            
+            <Text style={styles.warningText}>
+              Upozorenje!{"\n"}
+              Negativne vrednosti unosite samo u slučaju nedostatka pića.
+            </Text>
+            
             <View style={styles.buttonContainer}>
               <TouchableOpacity style={[styles.button, styles.confirmButton]} onPress={handleConfirm} activeOpacity={0.7}>
                 <Text style={styles.buttonText}>Potvrdi</Text>
@@ -86,6 +129,12 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 5,
   },
+  evaluatedText: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 10,
+    textAlign: 'center',
+},
   title: {
     fontSize: 18,
     fontWeight: '600',
@@ -112,6 +161,14 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   addButton: {
+    backgroundColor: '#FFA001',
+    padding: 10,
+    paddingHorizontal: 20,
+    borderRadius: 6,
+    borderWidth: 1,
+    marginRight: 4,
+  },
+  minusButton: {
     backgroundColor: '#FFA001',
     padding: 10,
     paddingHorizontal: 20,
@@ -148,4 +205,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default DialogModal;
+export default DialogModalN;
