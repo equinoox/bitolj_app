@@ -70,88 +70,91 @@ interface PdfGeneratorProps {
     <head>
       <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
       <style>
-        @page {
-          size: A4;
-          margin: 15mm;
-        }
-  
-        body {
-          font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-          padding: 0;
-          margin: 0;
-          width: 210mm;
-          height: 297mm;
-          box-sizing: border-box;
-          font-size: 12px;
-          color: black;
-        }
-  
-        .title {
-          text-align: center;
-          font-size: 18px;
-          margin-bottom: 8px;
-        }
-  
-        .info-line {
-          text-align: center;
-          margin-bottom: 10px;
-        }
-  
-        .table-title {
-          text-align: center;
-          font-size: 14px;
-          margin: 12px 0 6px;
-          font-weight: bold;
-        }
-  
-        table {
-          width: 100%;
-          border-collapse: collapse;
-          margin: 6px 0;
-        }
-  
-        th, td {
-          border: 1px solid #ddd;
-          padding: 4px;
-          text-align: center;
-          font-size: 11px;
-        }
-  
-        th {
-          font-weight: bold;
-        }
-  
-        tr:nth-child(even) {
-          background-color: #f9f9f9;
-        }
-  
-        .date {
-          text-align: right;
-          font-size: 10px;
-          margin-bottom: 10px;
-        }
-  
-        .total {
-          font-weight: bold;
-        }
-  
-        .description {
-          margin-top: 15px;
-          font-size: 11px;
-        }
-  
-        .bottom-container {
-          display: flex;
-          justify-content: center;
-          gap: 15px;
-          margin-top: 15px;
-        }
-  
-        .bottom-field {
-          font-size: 14px;
-          font-weight: bold;
-        }
-      </style>
+      @page {
+        size: A4;
+        margin: 10mm;
+      }
+
+      body {
+        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        padding: 0;
+        margin: 0;
+        width: 210mm;
+        height: 297mm;
+        box-sizing: border-box;
+        font-size: 11px;
+        color: black;
+      }
+
+      .title {
+        text-align: center;
+        font-size: 16px;
+        margin-bottom: 5px;
+      }
+
+      .info-line {
+        text-align: center;
+        margin-bottom: 8px;
+      }
+
+      .table-title {
+        text-align: center;
+        font-size: 13px;
+        margin: 8px 0 4px;
+        font-weight: bold;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 4px 0;
+      }
+
+      th, td {
+        border: 1px solid #ddd;
+        padding: 3px;
+        text-align: center;
+        font-size: 10px;
+      }
+
+      th {
+        font-weight: bold;
+      }
+
+      tr:nth-child(even) {
+        background-color: #f9f9f9;
+      }
+
+      .date {
+        text-align: right;
+        font-size: 9px;
+        margin-bottom: 6px;
+      }
+
+      .total {
+        font-weight: bold;
+      }
+
+      .description {
+        margin-top: 10px;
+        font-size: 10px;
+      }
+
+      .bottom-container {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        margin-top: 10px;
+        padding: 0 10px;
+      }
+
+      .bottom-field {
+        font-size: 12px;
+        font-weight: bold;
+        text-align: center;
+        flex: 1;
+      }
+    </style>
     </head>
     <body>
       <div class="date">${new Date().toLocaleDateString()}</div>
