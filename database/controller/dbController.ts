@@ -20,6 +20,7 @@ export const createTables = async (db: SQLiteDatabase) => {
           id_pice INTEGER PRIMARY KEY AUTOINCREMENT,
           naziv TEXT NOT NULL,
           cena TEXT NOT NULL,
+          position INTEGER,
           type TEXT NOT NULL CHECK (type IN ('piece', 'liters', 'kilograms', 'other')),
           deleted TEXT NOT NULL CHECK (deleted IN ('true', 'false'))
         );
@@ -85,6 +86,7 @@ export const rollbackTables = async (db: SQLiteDatabase) => {
         DROP TABLE IF EXISTS popis;
     `);
   };
+
 export const addAdmin = async (db: SQLiteDatabase) => {  
   try{
     console.log("Adding Admin...")
@@ -92,4 +94,13 @@ export const addAdmin = async (db: SQLiteDatabase) => {
   } catch (error) {
     console.log("Admin already added.")
   }
+  };
+
+  export const addPositionColumn = async (db: SQLiteDatabase) => {
+    try {
+      console.log("Adding column position...")
+      await db.execAsync(`ALTER TABLE Pice ADD COLUMN position TEXT;`)
+    } catch (error) {
+      console.log("Column position already added.")
+    }
   };

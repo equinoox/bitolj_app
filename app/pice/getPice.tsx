@@ -16,6 +16,7 @@ const getPice = () => {
     const [naziv, setNaziv] = useState('');
     const [cena, setCena] = useState('');
     const [type, setType] = useState('');
+    const [position, setPosition] = useState('')
 
     const handleAddDot = () => {
         if (!cena.includes(".")) {
@@ -41,7 +42,8 @@ const getPice = () => {
         if (selectedRow) {
             setNaziv(selectedRow.naziv);
             setCena(selectedRow.cena.toString());
-            setType(selectedRow.type); // Add this line to set the type
+            setType(selectedRow.type);
+            setPosition(selectedRow.position.toString())
         }
     }, [selectedRow]);
 
@@ -51,7 +53,7 @@ const getPice = () => {
         return /^\d+(\.\d+)?$/.test(value);
       };
     const handleTypes = async () => {
-        if(naziv == null || typeof naziv !== "string" || naziv == '' || cena == null || !isNumeric(cena)){
+        if(naziv == null || typeof naziv !== "string" || naziv == '' || cena == null || !isNumeric(cena) || position == null){
           Alert.alert(
             "Error",
             "Nepravilno uneti podaci.",
@@ -72,13 +74,14 @@ const getPice = () => {
                 naziv: naziv.trim(),
                 cena: Number(cena),
                 type: type,
+                position: Number(position)
             };
             try {
-                await database.runAsync("UPDATE pice SET deleted = 'true' WHERE id_pice = ?", [
+                await database.runAsync("UPDATE pice SET deleted = 'true', position = NULL WHERE id_pice = ?", [
                     updatedRow.id_pice,
                 ]);
-                await database.runAsync("INSERT INTO pice (naziv, cena, type, deleted) VALUES (?, ?, ?, ?);", [
-                    updatedRow.naziv, updatedRow.cena, updatedRow.type, "false"
+                await database.runAsync("INSERT INTO pice (naziv, cena, position, type, deleted) VALUES (?, ?, ?, ?, ?);", [
+                    updatedRow.naziv, updatedRow.cena, updatedRow.position, updatedRow.type, "false"
                   ]);
                 await loadData();
                 Alert.alert("Success", "Piće uspešno ažurirano.");
@@ -108,7 +111,10 @@ const getPice = () => {
             return;
         }
         try {
-            await database.runAsync("UPDATE pice SET deleted = 'true' WHERE id_pice = ?;", [Number(selectedRow.id_pice)])
+            await database.runAsync(
+                "UPDATE pice SET deleted = 'true', position = NULL WHERE id_pice = ?;", 
+                [Number(selectedRow.id_pice)]
+              );
             setSelectedRow(null);
             await loadData();
             Alert.alert("Success", "Piće uspešno izbrisano.");
@@ -126,6 +132,7 @@ const getPice = () => {
                         <Text className="text-lg font-bold flex-1 text-center">Naziv</Text>
                         <Text className="text-lg font-bold flex-1 text-center">Cena</Text>
                         <Text className="text-lg font-bold flex-1 text-center">Tip</Text>
+                        <Text className="text-lg font-bold flex-1 text-center">Pozicija</Text>
                     </View>
     
                     {/* Table Data */}
@@ -145,6 +152,7 @@ const getPice = () => {
                                 {item.type === 'kilograms' && 'Gram'}
                                 {item.type === 'other' && 'Ostalo'}
                             </Text>
+                            <Text className="flex-1 text-center">{item.position !== null ? `${item.position}` : 'N/A'}</Text>
                         </TouchableOpacity>
                     ))}
     
@@ -174,7 +182,7 @@ const getPice = () => {
                             {/* Edit Form */}
                             <View className="mt-6 w-full items-center">
                                 <View className="w-full max-w-md">
-                                    <Text className='text-center text-lg mb-2'>Naziv</Text>
+                                    <Text className='text-center font-medium text-gray-700 text-lg mb-2'>Naziv</Text>
                                     <TextInput
                                         placeholder='Naziv'
                                         value={naziv}
@@ -200,20 +208,33 @@ const getPice = () => {
                                         </TouchableOpacity>
                                     </View>
     
-                                    <Text className='text-center text-lg mb-2 font-medium text-gray-700'>Tip</Text>
-                                    <View className="w-full bg-white border border-gray-300 rounded-lg overflow-hidden shadow-md mb-4">
+                                    <Text className='text-center text-lg my-2 font-medium text-gray-700'>Tip & Pozicija</Text>
+                                    <View className="flex-row justify-center items-center mb-2 space-x-2">
+                                    {/* Picker */}
+                                    <View className="w-[40%] bg-white border border-gray-300 rounded-lg mr-2 overflow-hidden shadow-md">
                                         <Picker
-                                            selectedValue={type}
-                                            onValueChange={(itemValue) => setType(itemValue)}
-                                            style={{ height: 60, width: '100%' }}
-                                            dropdownIconColor="#6B7280"
+                                        selectedValue={type}
+                                        onValueChange={(itemValue) => setType(itemValue)}
+                                        style={{ height: 60, width: '100%' }}
+                                        dropdownIconColor="#6B7280"
                                         >
-                                            <Picker.Item label="Komadno" value="piece" />
-                                            <Picker.Item label="Mililitarsko" value="liters" />
-                                            <Picker.Item label="Gramsko" value="kilograms" />
-                                            <Picker.Item label="Ostalo" value="other" />
+                                        <Picker.Item label="Komadno" value="piece" />
+                                        <Picker.Item label="Mililitarsko" value="liters" />
+                                        <Picker.Item label="Gramsko" value="kilograms" />
+                                        <Picker.Item label="Ostalo" value="other" />
                                         </Picker>
                                     </View>
+
+                                    {/* TextInput */}
+                                    <TextInput
+                                        value={position}
+                                        onChangeText={setPosition}
+                                        keyboardType="numeric"
+                                        placeholder="Pozicija"
+                                        className="w-[30%] h-[50px] border border-gray-300 rounded-lg px-4 bg-white shadow-md text-center"
+                                    />
+                                    </View>
+                                    
                                 </View>
                             </View>
                         </View>

@@ -136,7 +136,7 @@ const LogIn = () => {
         <View className="bg-secondary_dark py-8 flex-shrink-0">
           <View className="justify-center items-center px-6">
             <Text className="text-text_color_2 text-lg italic">
-              <Text className="text-orange font-bold">Restoran Bitolj</Text> @ 2024 All Rights Reserved
+              <Text className="text-orange font-bold">Restoran Bitolj</Text> @ 2025 All Rights Reserved
             </Text>
           </View>
         </View>

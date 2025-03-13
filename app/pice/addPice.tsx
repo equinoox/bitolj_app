@@ -8,6 +8,7 @@ const AddPice = () => {
   const [naziv, setNaziv] = useState("");
   const [cena, setCena] = useState("");
   const [type, setType] = useState("piece");
+  const [position, setPosition] = useState("")
 
   // CREATE
   const isNumeric = (value: string): boolean => {
@@ -15,7 +16,7 @@ const AddPice = () => {
   };
 
   const handleTypes = async () => {
-    if (naziv == null || typeof naziv !== "string" || naziv === '' || cena == null || !isNumeric(cena)) {
+    if (naziv == null || typeof naziv !== "string" || naziv === '' || cena == null || !isNumeric(cena) || position == null) {
       Alert.alert(
         "Error",
         "Nepravilno uneti podaci.",
@@ -32,8 +33,8 @@ const AddPice = () => {
 
   const handleSave = async () => {
     try {
-      await database.runAsync("INSERT INTO pice (naziv, cena, type, deleted) VALUES (?, ?, ?, ?);", [
-        naziv, cena, type, "false"
+      await database.runAsync("INSERT INTO pice (naziv, cena, position, type, deleted) VALUES (?, ?, ?, ?, ?);", [
+        naziv, cena, parseInt(position), type, "false"
       ]);
       Alert.alert(
         "Adding Success",
@@ -87,21 +88,35 @@ const AddPice = () => {
             </TouchableOpacity>
           </View>
 
-          {/* Picker for the type */}
+          {/* Picker and TextInput side by side */}
           <Text className='text-center mt-2 text-lg font-medium text-gray-700'>Tip</Text>
-          <View className="w-2/6 mt-2 bg-white border border-gray-300 rounded-lg overflow-hidden shadow-md">
-            <Picker
-              selectedValue={type}
-              onValueChange={(itemValue) => setType(itemValue)}
-              style={{ height: 60, width: '100%' }}
-              dropdownIconColor="#6B7280"
-            >
-              <Picker.Item label="Komadno" value="piece" />
-              <Picker.Item label="Mililitarsko" value="liters" />
-              <Picker.Item label="Gramsko" value="kilograms" />
-              <Picker.Item label="Ostalo" value="other" />
-            </Picker>
+
+          <View className="flex-row justify-between items-center mt-2 space-x-2">
+            {/* Picker */}
+            <View className="w-[40%] bg-white border border-gray-300 rounded-lg mr-2 overflow-hidden shadow-md">
+              <Picker
+                selectedValue={type}
+                onValueChange={(itemValue) => setType(itemValue)}
+                style={{ height: 60, width: '100%' }}
+                dropdownIconColor="#6B7280"
+              >
+                <Picker.Item label="Komadno" value="piece" />
+                <Picker.Item label="Mililitarsko" value="liters" />
+                <Picker.Item label="Gramsko" value="kilograms" />
+                <Picker.Item label="Ostalo" value="other" />
+              </Picker>
+            </View>
+
+            {/* TextInput */}
+            <TextInput
+              value={position}
+              onChangeText={setPosition}
+              keyboardType="numeric"
+              placeholder="Pozicija"
+              className="w-[30%] h-[50px] border border-gray-300 rounded-lg px-4 bg-white shadow-md text-center"
+            />
           </View>
+
 
           <View className='w-full flex-row justify-around mt-3'>
             <TouchableOpacity

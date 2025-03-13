@@ -1,4 +1,4 @@
-import { addAdmin, createTables, rollbackTables } from '../database/controller/dbController';
+import { addAdmin, createTables, addPositionColumn, rollbackTables } from '../database/controller/dbController';
 import { AuthProvider } from '../contexts/AuthContext';
 import { SQLiteDatabase, SQLiteProvider } from 'expo-sqlite';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -16,10 +16,12 @@ const RootLayout = () => {
       await createTables(db);
       console.log("Database loaded succesfully!");
       await addAdmin(db);
+      await addPositionColumn(db);
     } catch (error) {
       console.log(error);
     }
   }
+  
   return (
     <Suspense fallback={<Fallback/>}>
       <AuthProvider>

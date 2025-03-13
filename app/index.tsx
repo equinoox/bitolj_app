@@ -72,14 +72,14 @@ const App = () => {
             >
               <Text className="text-black text-2xl font-bold">Nastavi</Text>
             </TouchableOpacity>
-            <Text className="text-white text-center text-md mt-2">Version: 1.1.9</Text>
+            <Text className="text-white text-center text-md mt-2">Version: 1.2.1</Text>
           </View>
 
           {/* Footer */}
           <View className="bg-secondary_dark py-8">
             <View className="justify-center items-center px-6">
               <Text className="text-text_color_2 text-lg italic">
-                <Text className="text-orange font-bold">Restoran Bitolj</Text> @ 2024 All Rights Reserved
+                <Text className="text-orange font-bold">Restoran Bitolj</Text> @ 2025 All Rights Reserved
               </Text>
             </View>
           </View>

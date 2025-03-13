@@ -30,8 +30,9 @@ const listaPice = () => {
                         <Text className="text-lg font-bold flex-1 text-center">Naziv</Text>
                         <Text className="text-lg font-bold flex-1 text-center">Cena</Text>
                         <Text className="text-lg font-bold flex-1 text-center">Tip</Text>
+                        <Text className="text-lg font-bold flex-1 text-center">Pozicija</Text>
                     </View>
-                    
+    
                     {/* Table Data */}
                     {data.map((item) => (
                         <TouchableOpacity
@@ -41,25 +42,30 @@ const listaPice = () => {
                             }`}
                             onPress={() => setSelectedRow(item)}
                         >
-                            {/* Left side: Naziv */}
+                            {/* Naziv */}
                             <Text className="flex-1 text-center">{item.naziv}</Text>
-                            
-                            {/* Center: Cena */}
-                            <Text className="flex-1 text-center">{item.cena} RSD</Text>
-                            
-                            {/* Right side: Tip */}
+    
+                            {/* Cena */}
+                            <Text className="flex-1 text-center">{item.cena}</Text>
+    
+                            {/* Tip */}
                             <Text className="flex-1 text-center">
                                 {item.type === 'piece' && 'Komad'}
                                 {item.type === 'liters' && 'Mililitar'}
                                 {item.type === 'kilograms' && 'Gram'}
                                 {item.type === 'other' && 'Ostalo'}
                             </Text>
+    
+                            {/* Pozicija */}
+                            <Text className="flex-1 text-center">
+                                {item.position !== null ? `${item.position}` : 'N/A'}
+                            </Text>
                         </TouchableOpacity>
                     ))}
                 </View>
             </ScrollView>
         </SafeAreaView>
-    )
+    );
 }
 
 

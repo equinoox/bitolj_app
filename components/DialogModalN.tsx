@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Modal, StyleSheet, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard, ScrollView } from 'react-native';
-
 
 interface DialogModalNProps {
   visible: boolean;
@@ -11,6 +10,19 @@ interface DialogModalNProps {
 
 const DialogModalN: React.FC<DialogModalNProps> = ({ visible, onClose, onConfirm, initialValue }) => {
   const [input, setInput] = useState<string>(initialValue || '');
+  const inputRef = useRef<TextInput>(null);
+  
+  // Use useEffect to focus the input when the modal becomes visible
+  useEffect(() => {
+    if (visible) {
+      // Short timeout to ensure modal is fully rendered before focusing
+      const timer = setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [visible]);
   
   const handleAdd = () => {
     setInput((prev) => `${prev}+`);
@@ -77,12 +89,13 @@ const DialogModalN: React.FC<DialogModalNProps> = ({ visible, onClose, onConfirm
             </Text>
             
             <TextInput
+              ref={inputRef}
               style={styles.input}
               value={input}
               onChangeText={setInput}
               keyboardType="number-pad"
               placeholder="Unesite vrednosti..."
-              autoFocus
+              autoFocus={true}
             />
             
             <View style={styles.inlineButtons}>

@@ -124,7 +124,7 @@ const Popis = () => {
 
   type Pice = {
     id_pice: number; naziv: string; cena: string;
-    type: string; pocetno_stanje?: string; prodato?: string;
+    type: string; position: number, pocetno_stanje?: string; prodato?: string;
   };
 
   type Stavka_Popisa = {
@@ -584,6 +584,15 @@ const Popis = () => {
     }
   };
 
+  const isValidDate = (inputDateString: string): boolean => {
+  
+    // Get today's date without time part
+    const today = new Date().toISOString().split('T')[0];
+  
+    // Check if inputDate is today or before today
+    return inputDateString <= today;
+  };
+
   const validateInputs = async () => {
     const errors: string[] = [];
   
@@ -592,8 +601,14 @@ const Popis = () => {
       errors.push('Morate izabrati smenu (prva ili druga).');
     }
 
+    // Validate Date Format
     if (!otherInputs.datum || !/^\d{4}-\d{2}-\d{2}$/.test(otherInputs.datum)) {
       errors.push('Nepravilan format datuma.');
+    }
+
+    // Validate Date time
+    if(!isValidDate(otherInputs.datum)){
+      errors.push('Ne možete uneti budući datum.');
     }
   
     if (otherInputs.smena) {
@@ -857,145 +872,159 @@ const Popis = () => {
           </View>
         </View>
 
-      {/* Content */}
-      {["piece", "liters", "kilograms", "other"].map((type) => (
-        <View key={type} className="mb-6 mx-4 border border-gray-300 rounded-lg shadow-md bg-white">
-          {/* Table Title */}
-          <View className="bg-secondary rounded-t-lg p-4">
-            <Text className="text-orange text-2xl font-bold text-center">
-              Stavke Popisa [{type === "piece" ? "kom" : type === "liters" ? "ml" : type === "kilograms" ? "g" : "Ostalo"}]
-            </Text>
-          </View>
-
-          <ScrollView keyboardShouldPersistTaps='handled' horizontal showsHorizontalScrollIndicator={true}>
-            <View>
-              {/* Table Header */}
-              <View className="flex-row bg-gray-200 border-b-2 border-black py-3">
-                <Text className="w-32 text-center text-l font-bold">Naziv</Text>
-                <Text className="w-24 text-center text-l font-bold">Početak</Text>
-                <Text className="w-24 text-center text-l font-bold">Uneto</Text>
-                <Text className="w-24 text-center text-l font-bold">Kraj</Text>
-                <Text className="w-24 text-center text-l font-bold">Prodato</Text>
-                <Text className="w-24 text-center text-l font-bold">Cena</Text>
-                <Text className="w-28 text-center text-l font-bold">Ukupno</Text>
-              </View>
-
-              {/* Table Rows */}
-              {piceData.filter((item) => item.type === type).map((item) => {
-                const pocetak = parseFloat(inputValues[item.id_pice]?.pocetak || '0');
-                const uneto = inputValues[item.id_pice]?.uneto || '0';
-                const kraj = calculateSum(inputValues[item.id_pice]?.kraj || '0');
-                const prodato = (parseFloat(evaluateExpression(uneto)) + pocetak) - kraj;
-                const ukupno = prodato * parseFloat(item.cena);
-                const prodato_other = (kraj - pocetak);
-                const ukupno_other = prodato_other * parseFloat(item.cena);
-
-                const copyPocetakToKraj = () => {
-                  const pocetakValue = inputValues[item.id_pice]?.pocetak || '0';
-                  handleInputChange(item.id_pice, "kraj", pocetakValue);
-                  handleBlur(item, pocetakValue, "Kraj");
-                };
-
-                return (
-                  <View key={item.id_pice} className={`flex-row items-center border-b py-2`}>
-                    {/* Naziv */}
-                    <Text className="w-32 text-center text-lg">{item.naziv}</Text>
-
-                    {/* Početak Input */}
-                    {userData?.role === "admin" || userData?.role === "manager" ? (
-                    <View className="w-24 h-11 flex-row items-center">
-                      <TextInput
-                        className="flex-1 text-center border border-gray-400 rounded-l-md px-2 py-2 text-lg bg-gray-100"
-                        keyboardType="number-pad"
-                        placeholder="0"
-                        value={inputValues[item.id_pice]?.pocetak}
-                        onChangeText={(value) => handleInputChange(item.id_pice, "pocetak", value)}
-                        onBlur={() => handleBlur(item, inputValues[item.id_pice]?.pocetak, "Početak")}
-                      />
-                      <TouchableOpacity 
-                        className="h-full border border-l-0 border-gray-400 rounded-r-md px-1 bg-gray-200 justify-center"
-                        onPress={copyPocetakToKraj}
-                      >
-                        <Entypo name="triangle-right" size={12} color="black"/>
-                      </TouchableOpacity>
-                    </View>
-                    ) : (
-                      <View className="w-24 h-11 flex-row items-center">
-                      <Text className="flex-1 text-center text-lg">{inputValues[item.id_pice]?.pocetak || "0"}</Text>
-                      <TouchableOpacity 
-                        className="h-full border border-gray-400 rounded-md px-1 bg-gray-200 justify-center items-center"
-                        onPress={copyPocetakToKraj}
-                      >
-                        <Entypo name="triangle-right" size={12} color="black" />
-                      </TouchableOpacity>
-                    </View>
-                    )}
-
-                    {/* Uneto Input */}
-                    {type === "other" ? (
-                      <Text className="w-24 text-center text-lg">N/A</Text>
-                    ) : (
-                      <>
-                        <TouchableOpacity
-                          className="w-24 text-center border border-gray-400 rounded-md px-2 py-2 text-lg bg-gray-100 justify-center items-center"
-                          onPress={() => handleDialogPressN(item.id_pice)}
-                        >
-                          {/* Display the raw expression as stored */}
-                          <Text className="text-lg">
-                            {calculateEx(inputValues[item.id_pice]?.uneto || '0').toString()}
-                          </Text>
-                        </TouchableOpacity>
-                        
-                        <DialogModalN
-                          visible={modalVisibleN && currentIdN === item.id_pice}
-                          onClose={() => {
-                            setModalVisibleN(false);
-                            const currentValue = inputValues[item.id_pice]?.uneto || '0';
-                            handleBlur(item, currentValue, 'Uneto');
-                          }}
-                          onConfirm={(value) => {
-                            handleDialogConfirmN(value);
-                            handleBlur(item, value, 'Uneto');
-                          }}
-                          initialValue={inputValues[item.id_pice]?.uneto || ''}
-                        />
-                      </>
-                    )}
-
-                    {/* Kraj Input */}
-                    <TouchableOpacity
-                      className="w-24 text-center border border-gray-400 rounded-md px-2 py-2 text-lg bg-gray-100 justify-center items-center"
-                      onPress={() => handleDialogPress(item.id_pice)}
-                    >
-                      <Text className="text-lg">{calculateSum(inputValues[item.id_pice]?.kraj || '0').toString()}</Text>
-                    </TouchableOpacity>
-
-                    <DialogModal
-                      visible={modalVisible && currentId === item.id_pice}
-                      onClose={() => setModalVisible(false)}
-                      onConfirm={handleDialogConfirm}
-                      initialValue={inputValues[item.id_pice]?.kraj || ''}
-                    />
-                    
-                    {/* Prodato */}
-                    <Text className="w-24 text-center text-lg">
-                      {type === "other" ? Math.max(0, prodato_other).toString() || "0" : Math.max(0, prodato).toString() || "0"}
-                    </Text>
-
-                    {/* Cena */}
-                    <Text className="w-24 text-center text-lg">{item.cena}</Text>
-
-                    {/* Ukupno */}
-                    <Text className="w-28 text-center text-lg font-bold">
-                      {type === "other" ? Math.max(0, parseFloat(ukupno_other.toFixed(2))).toString() || "0" : Math.max(0, parseFloat(ukupno.toFixed(2))).toString() || "0"} RSD
-                    </Text>
-                  </View>
-                );
-              })}
+        {/* Content */}
+        {["piece", "liters", "kilograms", "other"].map((type) => (
+          <View key={type} className="mb-6 mx-4 border border-gray-300 rounded-lg shadow-md bg-white">
+            {/* Table Title */}
+            <View className="bg-secondary rounded-t-lg p-4">
+              <Text className="text-orange text-2xl font-bold text-center">
+                Stavke Popisa [{type === "piece" ? "kom" : type === "liters" ? "ml" : type === "kilograms" ? "g" : "Ostalo"}]
+              </Text>
             </View>
-          </ScrollView>
-        </View>
-      ))}
+
+            <ScrollView keyboardShouldPersistTaps='handled' horizontal showsHorizontalScrollIndicator={true}>
+              <View>
+                {/* Table Header | w-[7rem] = w-28 */}
+                <View className="flex-row bg-gray-200 border-b-2 border-black py-3">
+                  <Text className="w-[6.5rem] text-center text-l font-bold">Naziv</Text>
+                  <Text className="w-32 text-center text-l font-bold">Početak</Text> 
+                  <Text className="w-28 text-center text-l font-bold">Uneto</Text>
+                  <Text className="w-28 text-center text-l font-bold">Kraj</Text>
+                  <Text className="w-20 text-center text-l font-bold">Prodato</Text>
+                  <Text className="w-20 text-center text-l font-bold">Cena</Text>
+                  <Text className="w-28 text-center text-l font-bold">Ukupno</Text>
+                </View>
+
+                {/* Table Rows */}
+                {piceData
+                .filter((item) => item.type === type)
+                .sort((a, b) => (a.position || 9999) - (b.position || 9999))
+                .map((item) => {
+                  const pocetak = parseFloat(inputValues[item.id_pice]?.pocetak || '0');
+                  const uneto = inputValues[item.id_pice]?.uneto || '0';
+                  const kraj = calculateSum(inputValues[item.id_pice]?.kraj || '0');
+                  const prodato = (parseFloat(evaluateExpression(uneto)) + pocetak) - kraj;
+                  const ukupno = prodato * parseFloat(item.cena);
+                  const prodato_other = (kraj - pocetak);
+                  const ukupno_other = prodato_other * parseFloat(item.cena);
+
+                  const copyPocetakToKraj = () => {
+                    const pocetakValue = inputValues[item.id_pice]?.pocetak || '0';
+                    handleInputChange(item.id_pice, "kraj", pocetakValue);
+                    handleBlur(item, pocetakValue, "Kraj");
+                  };
+
+                  return (
+                    <View key={item.id_pice} className={`flex-row items-center border-b py-3`}>
+                      {/* Naziv */}
+                      <Text className="w-[6.5rem] text-center text-xl">{item.naziv}</Text>
+
+                      {/* Početak Input with unified look - fixed alignment */}
+                      {userData?.role === "admin" || userData?.role === "manager" ? (
+                        <View className="w-32 flex-row h-14 overflow-hidden">
+                          <View className="flex-1 border border-r-0 border-gray-400 rounded-l-md overflow-hidden">
+                            <TextInput
+                              className="flex-1 h-full text-center px-2 text-xl bg-gray-100"
+                              keyboardType="number-pad"
+                              placeholder="0"
+                              value={inputValues[item.id_pice]?.pocetak}
+                              onChangeText={(value) => handleInputChange(item.id_pice, "pocetak", value)}
+                              onBlur={() => handleBlur(item, inputValues[item.id_pice]?.pocetak, "Početak")}
+                            />
+                          </View>
+                          <TouchableOpacity 
+                            className="border border-gray-400 rounded-r-md bg-gray-200 justify-center items-center w-8"
+                            onPress={copyPocetakToKraj}
+                          >
+                            <Entypo name="triangle-right" size={15} color="black"/>
+                          </TouchableOpacity>
+                        </View>
+                      ) : (
+                        <View className="w-32 flex-row h-14 overflow-hidden">
+                          <View className="flex-1 border border-r-0 border-gray-400 rounded-l-md bg-gray-100 justify-center">
+                            <Text className="text-center text-xl">
+                              {inputValues[item.id_pice]?.pocetak || "0"}
+                            </Text>
+                          </View>
+                          <TouchableOpacity 
+                            className="border border-gray-400 rounded-r-md bg-gray-200 justify-center items-center w-8"
+                            onPress={copyPocetakToKraj}
+                          >
+                            <Entypo name="triangle-right" size={15} color="black" />
+                          </TouchableOpacity>
+                        </View>
+                      )}
+
+                      {/* Uneto Input - taller */}
+                      {type === "other" ? (
+                        <Text className="w-28 text-center text-xl h-14 flex items-center justify-center">N/A</Text>
+                      ) : (
+                        <>
+                          <TouchableOpacity
+                            className="w-28 h-14 border border-gray-400 rounded-md bg-gray-100 justify-center items-center"
+                            onPress={() => handleDialogPressN(item.id_pice)}
+                          >
+                            <Text className="text-xl">
+                              {calculateEx(inputValues[item.id_pice]?.uneto || '0').toString()}
+                            </Text>
+                          </TouchableOpacity>
+                          
+                          <DialogModalN
+                            visible={modalVisibleN && currentIdN === item.id_pice}
+                            onClose={() => {
+                              setModalVisibleN(false);
+                              const currentValue = inputValues[item.id_pice]?.uneto || '0';
+                              handleBlur(item, currentValue, 'Uneto');
+                            }}
+                            onConfirm={(value) => {
+                              handleDialogConfirmN(value);
+                              handleBlur(item, value, 'Uneto');
+                            }}
+                            initialValue={inputValues[item.id_pice]?.uneto || ''}
+                          />
+                        </>
+                      )}
+
+                      {/* Kraj Input - taller */}
+                      <TouchableOpacity
+                        className="w-28 h-14 border border-gray-400 rounded-md bg-gray-100 justify-center items-center"
+                        onPress={() => handleDialogPress(item.id_pice)}
+                      >
+                        <Text className="text-xl">{calculateSum(inputValues[item.id_pice]?.kraj || '0').toString()}</Text>
+                      </TouchableOpacity>
+
+                      <DialogModal
+                        visible={modalVisible && currentId === item.id_pice}
+                        onClose={() => setModalVisible(false)}
+                        onConfirm={handleDialogConfirm}
+                        initialValue={inputValues[item.id_pice]?.kraj || ''}
+                      />
+                      
+                      {/* Prodato - adjusted height for alignment */}
+                      <View className="w-20 h-14 justify-center">
+                        <Text className="text-center text-xl">
+                          {type === "other" ? Math.max(0, prodato_other).toString() || "0" : Math.max(0, prodato).toString() || "0"}
+                        </Text>
+                      </View>
+
+                      {/* Cena - adjusted height for alignment */}
+                      <View className="w-20 h-14 justify-center">
+                        <Text className="text-center text-xl">{item.cena}</Text>
+                      </View>
+
+                      {/* Ukupno - adjusted height for alignment */}
+                      <View className="w-28 h-14 justify-center">
+                        <Text className="text-center text-xl font-bold">
+                          {type === "other" ? Math.max(0, parseFloat(ukupno_other.toFixed(2))).toString() || "0" : Math.max(0, parseFloat(ukupno.toFixed(2))).toString() || "0"} RSD
+                        </Text>
+                      </View>
+                    </View>
+                  );
+                })}
+              </View>
+            </ScrollView>
+          </View>
+        ))}
 
 
         <View className="m-4 mt-2">
@@ -1246,8 +1275,8 @@ const Popis = () => {
               className="h-12"
             >
               <Picker.Item label="[Smena]" enabled={false} value="" style={{ color: 'black' }}/>
-              <Picker.Item label="Prva smena" value="prva"/>
-              <Picker.Item label="Druga smena" value="druga"/>
+              <Picker.Item label="1. Smena" value="prva"/>
+              <Picker.Item label="2. Smena" value="druga"/>
             </Picker>
           </View>
       </View>
