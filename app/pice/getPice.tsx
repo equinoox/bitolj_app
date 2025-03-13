@@ -43,7 +43,11 @@ const getPice = () => {
             setNaziv(selectedRow.naziv);
             setCena(selectedRow.cena.toString());
             setType(selectedRow.type);
-            setPosition(selectedRow.position.toString())
+            if(selectedRow.position == null){
+                setPosition('')
+            } else {
+                setPosition(selectedRow.position.toString())
+            }
         }
     }, [selectedRow]);
 

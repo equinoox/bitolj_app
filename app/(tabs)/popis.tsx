@@ -919,7 +919,7 @@ const Popis = () => {
                       {/* Naziv */}
                       <Text className="w-[6.5rem] text-center text-xl">{item.naziv}</Text>
 
-                      {/* Početak Input with unified look - fixed alignment */}
+                      {/* Početak */}
                       {userData?.role === "admin" || userData?.role === "manager" ? (
                         <View className="w-32 flex-row h-14 overflow-hidden">
                           <View className="flex-1 border border-r-0 border-gray-400 rounded-l-md overflow-hidden">

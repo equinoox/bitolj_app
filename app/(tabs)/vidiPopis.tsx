@@ -22,13 +22,17 @@ const VidiPopis = () => {
 
   type Pice = {
     id_pice: number; naziv: string; cena: string;
-    type: string; pocetno_stanje?: string; prodato?: string;
+    type: string; position: number; pocetno_stanje?: string; prodato?: string;
   };
 
   type Stavka_Popisa = {
     id_stavka_popisa: number; id_popis: number; pocetno_stanje: string;
     uneto: string; krajnje_stanje: string; prodato: string; ukupno: string; id_pice: number;
   };
+
+  interface StavkaWithPice extends Stavka_Popisa {
+    pice: Pice | undefined;
+  }
 
   const { userData, setUserData } = useAuth();
   const logoutConfirm = () => {
@@ -277,48 +281,73 @@ const VidiPopis = () => {
                   </View>
 
                   {/* Rows */}
-                  {dataStavka.map((stavka) => {
-                    const matchingPice = dataPice.find((pice) => pice.id_pice === stavka.id_pice);
-                    return (
-                      <View
-                        key={stavka.id_stavka_popisa}
-                        className="flex-row border-b items-center justify-center"
-                      >
-                        <Text className="w-32 text-center text-lg text-gray-700 py-2">
-                          {matchingPice?.naziv || 'N/A'}
-                        </Text>
-                        <Text className="w-32 text-center text-lg text-gray-700 py-2">
-                          {stavka.pocetno_stanje || 'N/A'}
-                        </Text>
-                        <Text 
-                          className="w-32 text-center text-lg text-gray-700 py-2"
-                          onPress={() => {
-                            const expression = stavka.uneto || 'N/A';
-                            Alert.alert('Izraz', `Sabirak: ${expression}`);
-                          }}>
-                          {evaluateExpression(stavka.uneto) || 'N/A'}
-                        </Text>
-                        <Text
-                          className="w-32 text-center text-lg text-gray-700 py-2"
-                          onPress={() => {
-                            const expression = stavka.krajnje_stanje || 'N/A';
-                            Alert.alert('Izraz', `Sabirak: ${expression}`);
-                          }}
+                  {dataStavka
+                    .map((stavka: Stavka_Popisa): StavkaWithPice => {
+                      const matchingPice = dataPice.find((pice: Pice) => pice.id_pice === stavka.id_pice);
+                      return { ...stavka, pice: matchingPice };
+                    })
+                    .sort((a: StavkaWithPice, b: StavkaWithPice): number => {
+                      const typePriority: { [key: string]: number } = {
+                        'piece': 1,
+                        'liters': 2,
+                        'kilograms': 3,
+                        'other': 4
+                      };
+
+                      const priorityA = typePriority[a.pice?.type || 'other'] || 4;
+                      const priorityB = typePriority[b.pice?.type || 'other'] || 4;
+
+                      if (priorityA !== priorityB) {
+                        return priorityA - priorityB;
+                      }
+
+                      const posA = a.pice?.position ?? 9999;
+                      const posB = b.pice?.position ?? 9999;
+                      return posA - posB;
+                    })
+                    .map((item: StavkaWithPice) => {
+                      const stavka = item;
+                      const matchingPice = item.pice;
+                      return (
+                        <View
+                          key={stavka.id_stavka_popisa}
+                          className="flex-row border-b items-center justify-center"
                         >
-                          {evaluateExpression(stavka.krajnje_stanje) || '0'}
-                        </Text>
-                        <Text className="w-32 text-center text-lg text-gray-700 py-2">
-                          {stavka.prodato || 'N/A'}
-                        </Text>
-                        <Text className="w-32 text-center text-lg text-gray-700 py-2">
-                          {matchingPice?.cena || 'N/A'}
-                        </Text>
-                        <Text className="w-32 text-center text-lg font-bold text-secondary py-2">
-                          {stavka.ukupno || 'N/A'} din
-                        </Text>
-                      </View>
-                    );
-                  })}
+                          <Text className="w-32 text-center text-lg text-gray-700 py-2">
+                            {matchingPice?.naziv || 'N/A'}
+                          </Text>
+                          <Text className="w-32 text-center text-lg text-gray-700 py-2">
+                            {stavka.pocetno_stanje || 'N/A'}
+                          </Text>
+                          <Text 
+                            className="w-32 text-center text-lg text-gray-700 py-2"
+                            onPress={() => {
+                              const expression = stavka.uneto || 'N/A';
+                              Alert.alert('Izraz', `Sabirak: ${expression}`);
+                            }}>
+                            {evaluateExpression(stavka.uneto) || 'N/A'}
+                          </Text>
+                          <Text
+                            className="w-32 text-center text-lg text-gray-700 py-2"
+                            onPress={() => {
+                              const expression = stavka.krajnje_stanje || 'N/A';
+                              Alert.alert('Izraz', `Sabirak: ${expression}`);
+                            }}
+                          >
+                            {evaluateExpression(stavka.krajnje_stanje) || '0'}
+                          </Text>
+                          <Text className="w-32 text-center text-lg text-gray-700 py-2">
+                            {stavka.prodato || 'N/A'}
+                          </Text>
+                          <Text className="w-32 text-center text-lg text-gray-700 py-2">
+                            {matchingPice?.cena || 'N/A'}
+                          </Text>
+                          <Text className="w-32 text-center text-lg font-bold text-secondary py-2">
+                            {stavka.ukupno || 'N/A'} din
+                          </Text>
+                        </View>
+                      );
+                    })}
                 </View>
               </ScrollView>
             </View>

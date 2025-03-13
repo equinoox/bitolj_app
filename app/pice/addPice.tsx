@@ -15,8 +15,12 @@ const AddPice = () => {
     return /^\d+(\.\d+)?$/.test(value);
   };
 
+  const isDigit = (value: string): boolean => {
+    return /^\d+$/.test(value);
+  };
+
   const handleTypes = async () => {
-    if (naziv == null || typeof naziv !== "string" || naziv === '' || cena == null || !isNumeric(cena) || position == null) {
+    if (naziv == null || typeof naziv !== "string" || naziv === '' || cena == null || !isNumeric(cena) || position == null || parseInt(position) < 0 || !isDigit(position)) {
       Alert.alert(
         "Error",
         "Nepravilno uneti podaci.",
@@ -111,7 +115,7 @@ const AddPice = () => {
             <TextInput
               value={position}
               onChangeText={setPosition}
-              keyboardType="numeric"
+              keyboardType="number-pad"
               placeholder="Pozicija"
               className="w-[30%] h-[50px] border border-gray-300 rounded-lg px-4 bg-white shadow-md text-center"
             />

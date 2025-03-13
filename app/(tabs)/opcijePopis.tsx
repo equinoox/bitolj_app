@@ -26,7 +26,7 @@ const opcijePopis = () => {
 
     type Pice = {
     id_pice: number; naziv: string; cena: string;
-    type: string; pocetno_stanje?: string; prodato?: string;
+    type: string; position: number; pocetno_stanje?: string; prodato?: string;
     };
 
     type Stavka_Popisa = {
@@ -623,77 +623,107 @@ const opcijePopis = () => {
                 </View>
 
                 {/* Rows */}
-                {dataStavka.map((stavka) => {
-                  const matchingPice = dataPice.find((pice) => pice.id_pice === stavka.id_pice);
-                  const values = inputValues[stavka.id_stavka_popisa] || {
-                    pocetno_stanje: '',
-                    uneto: '',
-                    krajnje_stanje: ''
-                  };
-                  
-                  return (
-                    <View
-                      key={stavka.id_stavka_popisa}
-                      className="flex-row border-b items-center justify-center"
-                    >
-                      <Text className="w-32 text-center text-lg text-gray-700 py-2">
-                        {matchingPice?.naziv || 'N/A'}
-                      </Text>
-                      
-                      <TextInput 
-                        keyboardType='number-pad'
-                        className="w-32 text-center text-lg text-gray-700 py-2 mx-1 border rounded-md my-2 bg-gray-100 border-gray-400"
-                        value={values.pocetak}
-                        onChangeText={(value) => handleInputChange(stavka.id_stavka_popisa, 'pocetak', value)}
-                      />
+                {dataStavka
+                  .map((stavka) => {
+                    const matchingPice = dataPice.find((pice) => pice.id_pice === stavka.id_pice);
+                    return { ...stavka, pice: matchingPice };
+                  })
+                  .sort((a, b) => {
+                    // Define the priority order for types
+                    const typePriority: { [key: string]: number } = {
+                      'piece': 1,
+                      'liters': 2,
+                      'kilograms': 3,
+                      'other': 4
+                    };
 
-                      {matchingPice?.type !== "other" ? (
-                        <TextInput
-                          keyboardType="number-pad"
-                          className="w-32 text-center text-lg text-gray-700 py-2 mx-1 border rounded-md my-2 bg-gray-100 border-gray-400"
-                          value={values.uneto}
-                          onChangeText={(value) => handleInputChange(stavka.id_stavka_popisa, 'uneto', value)}
-                        />
-                      ) : (
-                        <Text className="w-32 text-center my-2 text-lg text-gray-700 py-2">
-                          N/A
+                    // Get the priority for each type, defaulting to a high number if the type is not in the map
+                    const priorityA = typePriority[a.pice?.type || 'other'] || 4;
+                    const priorityB = typePriority[b.pice?.type || 'other'] || 4;
+
+                    // First sort by type priority
+                    if (priorityA !== priorityB) {
+                      return priorityA - priorityB;
+                    }
+
+                    // Then sort by position within the same type
+                    const posA = a.pice?.position ?? 9999;
+                    const posB = b.pice?.position ?? 9999;
+                    return posA - posB;
+                  })
+                  .map((stavka) => {
+                    // Keep the `values` object as it is
+                    const values = inputValues[stavka.id_stavka_popisa] || {
+                      pocetno_stanje: '',
+                      uneto: '',
+                      krajnje_stanje: ''
+                    };
+
+                    const matchingPice = stavka.pice;
+
+                    return (
+                      <View
+                        key={stavka.id_stavka_popisa}
+                        className="flex-row border-b items-center justify-center"
+                      >
+                        <Text className="w-32 text-center text-lg text-gray-700 py-2">
+                          {matchingPice?.naziv || 'N/A'}
                         </Text>
-                      )}
 
-                      <TextInput
-                        keyboardType='default'
-                        className="w-32 text-center text-lg text-gray-700 py-2 mx-1 border rounded-md my-2 bg-gray-100 border-gray-400"
-                        value={localExpressions[stavka.id_stavka_popisa] || ''}
-                        onChangeText={(value) => {
-                          const sanitizedValue = value.replace(/[^0-9+]/g, '');
-                          setLocalExpressions(prev => ({
-                            ...prev,
-                            [stavka.id_stavka_popisa]: sanitizedValue
-                          }));
-                        }}
-                        onBlur={() => {
-                          handleInputChange(
-                            stavka.id_stavka_popisa,
-                            'kraj',
-                            localExpressions[stavka.id_stavka_popisa] || ''
-                          );
-                        }}
-                      />
+                        <TextInput
+                          keyboardType='number-pad'
+                          className="w-32 text-center text-lg text-gray-700 py-2 mx-1 border rounded-md my-2 bg-gray-100 border-gray-400"
+                          value={values.pocetak}
+                          onChangeText={(value) => handleInputChange(stavka.id_stavka_popisa, 'pocetak', value)}
+                        />
 
-                      <Text className="w-28 text-center text-lg text-gray-700 py-2">
-                        {matchingPice?.type !== "other" ? calculateProdato(stavka) : calculateProdatoOther(stavka)}
-                      </Text>
+                        {matchingPice?.type !== "other" ? (
+                          <TextInput
+                            keyboardType="number-pad"
+                            className="w-32 text-center text-lg text-gray-700 py-2 mx-1 border rounded-md my-2 bg-gray-100 border-gray-400"
+                            value={values.uneto}
+                            onChangeText={(value) => handleInputChange(stavka.id_stavka_popisa, 'uneto', value)}
+                          />
+                        ) : (
+                          <Text className="w-32 text-center my-2 text-lg text-gray-700 py-2">
+                            N/A
+                          </Text>
+                        )}
 
-                      <Text className="w-28 text-center text-lg text-gray-700 py-2">
-                        {matchingPice?.cena || 'N/A'}
-                      </Text>
+                        <TextInput
+                          keyboardType='default'
+                          className="w-32 text-center text-lg text-gray-700 py-2 mx-1 border rounded-md my-2 bg-gray-100 border-gray-400"
+                          value={localExpressions[stavka.id_stavka_popisa] || ''}
+                          onChangeText={(value) => {
+                            const sanitizedValue = value.replace(/[^0-9+]/g, '');
+                            setLocalExpressions(prev => ({
+                              ...prev,
+                              [stavka.id_stavka_popisa]: sanitizedValue
+                            }));
+                          }}
+                          onBlur={() => {
+                            handleInputChange(
+                              stavka.id_stavka_popisa,
+                              'kraj',
+                              localExpressions[stavka.id_stavka_popisa] || ''
+                            );
+                          }}
+                        />
 
-                      <Text className="w-28 text-center text-lg font-bold text-secondary py-2">
-                        {matchingPice?.type !== "other" ? calculateTotal(stavka, matchingPice) : calculateTotalOther(stavka, matchingPice)} din
-                      </Text>
-                    </View>
-                  );
-                })}
+                        <Text className="w-28 text-center text-lg text-gray-700 py-2">
+                          {matchingPice?.type !== "other" ? calculateProdato(stavka) : calculateProdatoOther(stavka)}
+                        </Text>
+
+                        <Text className="w-28 text-center text-lg text-gray-700 py-2">
+                          {matchingPice?.cena || 'N/A'}
+                        </Text>
+
+                        <Text className="w-28 text-center text-lg font-bold text-secondary py-2">
+                          {matchingPice?.type !== "other" ? calculateTotal(stavka, matchingPice) : calculateTotalOther(stavka, matchingPice)} din
+                        </Text>
+                      </View>
+                    );
+                  })}
               </View>
             </ScrollView>
           </View>
