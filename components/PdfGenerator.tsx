@@ -6,7 +6,8 @@ interface Pice {
   id_pice: number;
   naziv: string;
   cena: string;
-  // Add other Pice properties if needed
+  type: string;
+  position: number;
 }
 
 interface Stavka_Popisa {
@@ -17,6 +18,10 @@ interface Stavka_Popisa {
   krajnje_stanje: string;
   prodato: string;
   ukupno: string;
+}
+
+interface StavkaWithPice extends Stavka_Popisa {
+  pice: Pice | undefined;
 }
 
 interface Popis {
@@ -169,8 +174,33 @@ interface PdfGeneratorProps {
           </tr>
         </thead>
         <tbody>
-          ${dataStavka.map(stavka => {
-            const matchingPice = dataPice.find(pice => pice.id_pice === stavka.id_pice);
+          ${dataStavka
+            .map((stavka: Stavka_Popisa): StavkaWithPice => {
+              const matchingPice = dataPice.find((pice: Pice) => pice.id_pice === stavka.id_pice);
+              return { ...stavka, pice: matchingPice };
+            })
+            .sort((a: StavkaWithPice, b: StavkaWithPice): number => {
+              const typePriority: { [key: string]: number } = {
+                'piece': 1,
+                'liters': 2,
+                'kilograms': 3,
+                'other': 4
+              };
+
+              const priorityA = typePriority[a.pice?.type || 'other'] || 4;
+              const priorityB = typePriority[b.pice?.type || 'other'] || 4;
+
+              if (priorityA !== priorityB) {
+                return priorityA - priorityB;
+              }
+
+              const posA = a.pice?.position ?? 9999;
+              const posB = b.pice?.position ?? 9999;
+              return posA - posB;
+            })
+            .map((item: StavkaWithPice) => {
+              const stavka = item;
+              const matchingPice = item.pice;
             return `
               <tr>
                 <td>${matchingPice?.naziv || 'N/A'}</td>
