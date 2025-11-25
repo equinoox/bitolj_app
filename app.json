@@ -2,7 +2,7 @@
   "expo": {
     "name": "Bitolj Popis",
     "slug": "bitolj_popis",
-    "version": "1.2.2",
+    "version": "1.2.6",
     "orientation": "portrait",
     "icon": "./assets/images/icon.jpg",
     "scheme": "bitoljapp",
