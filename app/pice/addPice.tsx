@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { SafeAreaView, ScrollView, View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { SafeAreaView, ScrollView, View, Text, Alert } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useAuth } from '../../contexts/AuthContext';
 import { router } from 'expo-router';
 import { SessionExpiredOverlay } from '../../components/SessionExpiredOverlay';
+import { TextInputWithReset } from '../../components/TextInputWithReset';
+import { TouchableOpacityWithReset } from '../../components/TouchableOpacityWithReset';
 
 const AddPice = () => {
 
@@ -89,7 +91,7 @@ const AddPice = () => {
       <ScrollView keyboardShouldPersistTaps='handled' contentContainerStyle={{ flexGrow: 1 }}>
         <View className="mt-4 px-4 justify-center items-center">
           <Text className='text-center text-lg font-medium text-gray-700'>Naziv</Text>
-          <TextInput
+          <TextInputWithReset
             placeholder='Naziv'
             value={naziv}
             onChangeText={(text) => setNaziv(text)}
@@ -98,7 +100,7 @@ const AddPice = () => {
 
           <Text className='text-center mt-2 text-lg font-medium text-gray-700'>Cena</Text>
           <View className="relative w-3/4 mt-2">
-            <TextInput
+            <TextInputWithReset
               placeholder='Cena'
               value={cena}
               keyboardType="number-pad"
@@ -106,12 +108,12 @@ const AddPice = () => {
               className='w-full border border-gray-300 bg-white rounded-md p-3 text-gray-700 pr-12'
             />
             {/* Button inside the input */}
-            <TouchableOpacity
+            <TouchableOpacityWithReset
               onPress={handleAddDot}
               className="absolute h-10 w-10 right-2 top-2 p-2 bg-gray-200 rounded-md"
             >
               <Text className="text-sm font-bold text-gray-600">.</Text>
-            </TouchableOpacity>
+            </TouchableOpacityWithReset>
           </View>
 
           {/* Picker and TextInput side by side */}
@@ -134,7 +136,7 @@ const AddPice = () => {
             </View>
 
             {/* TextInput */}
-            <TextInput
+            <TextInputWithReset
               value={position}
               onChangeText={setPosition}
               keyboardType="number-pad"
@@ -145,19 +147,19 @@ const AddPice = () => {
 
 
           <View className='w-full flex-row justify-around mt-3'>
-            <TouchableOpacity
+            <TouchableOpacityWithReset
               className='mt-4 bg-orange items-center w-1/4 rounded-md py-4 px-4'
               onPress={async () => handleTypes()}
             >
               <Text className="text-black text-lg">Dodaj Piće</Text>
-            </TouchableOpacity>
+            </TouchableOpacityWithReset>
 
-            <TouchableOpacity
+            <TouchableOpacityWithReset
               className='mt-4 bg-red-500 items-center w-1/4 rounded-md py-4 px-4'
               onPress={async () => clearInputs()}
             >
               <Text className="text-black text-lg">Reset</Text>
-            </TouchableOpacity>
+            </TouchableOpacityWithReset>
           </View>
         </View>
       </ScrollView>

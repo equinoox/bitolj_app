@@ -1,4 +1,4 @@
-import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native'
+import { View, Text, SafeAreaView, ScrollView, Alert } from 'react-native'
 import { useState, useCallback, useEffect } from 'react'
 import { useSQLiteContext } from 'expo-sqlite';
 import { useFocusEffect } from 'expo-router';
@@ -7,6 +7,8 @@ import React from 'react'
 import { useAuth } from '../../contexts/AuthContext';
 import { router } from 'expo-router';
 import { SessionExpiredOverlay } from '../../components/SessionExpiredOverlay';
+import { TextInputWithReset } from '../../components/TextInputWithReset';
+import { TouchableOpacityWithReset } from '../../components/TouchableOpacityWithReset';
 
 const getRadnik = () => {
 
@@ -156,7 +158,7 @@ const getRadnik = () => {
 
                 {/* Table Data */}
                 {data.map((item) => (
-                    <TouchableOpacity
+                    <TouchableOpacityWithReset
                         key={item.id_korisnik}
                         className={`flex-row justify-between items-center border-b border-gray-300 py-3 ${
                             selectedRow?.id_korisnik === item.id_korisnik ? "bg-orange" : ""
@@ -175,7 +177,7 @@ const getRadnik = () => {
                                 item.role}
                             </Text>
                         </View>
-                    </TouchableOpacity>
+                    </TouchableOpacityWithReset>
                 ))}
 
                 {/* Selected Row Information */}
@@ -187,29 +189,29 @@ const getRadnik = () => {
                         
                         {/* Action Buttons */}
                         <View className='w-full flex-row justify-center mt-4'>
-                            <TouchableOpacity 
+                            <TouchableOpacityWithReset 
                                 className='bg-orange mx-2 items-center w-1/3 rounded-md py-4'
                                 onPress={handleTypes}
                             >
                                 <Text>Izmeni</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity 
+                            </TouchableOpacityWithReset>
+                            <TouchableOpacityWithReset 
                                 className='bg-red-500 mx-2 items-center w-1/3 rounded-md py-4'
                                 onPress={handleDelete}
                             >
                                 <Text>Izbriši</Text>
-                            </TouchableOpacity>
+                            </TouchableOpacityWithReset>
                         </View>
                         <View className='mt-4 justify-center items-center'>
                         <Text className='text-center'>Ime</Text>
-                        <TextInput
+                        <TextInputWithReset
                           placeholder='Ime'
                           value={ime}
                           onChangeText={(text) => setIme(text)}
                           className='w-3/4 mt-2 border border-gray-300 bg-white rounded-md p-3 text-gray-700'
                         />
                         <Text className='text-center mt-2'>Prezime</Text>
-                        <TextInput
+                        <TextInputWithReset
                           placeholder='Prezime'
                           value={prezime}
                           onChangeText={(text) => setPrezime(text)}

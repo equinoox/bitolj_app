@@ -5,12 +5,12 @@ import { Picker } from '@react-native-picker/picker';
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { FontAwesome5, MaterialIcons, AntDesign, Fontisto } from '@expo/vector-icons';
 import { useAuth } from '../../contexts/AuthContext';
-import * as Sharing from 'expo-sharing';
-import * as FileSystem from 'expo-file-system';
 import { useState, useCallback, useEffect } from 'react'
 import { useSQLiteContext } from 'expo-sqlite';
 import { useFocusEffect } from 'expo-router';
 import { SessionExpiredOverlay } from '../../components/SessionExpiredOverlay';
+import { TextInputWithReset } from '../../components/TextInputWithReset';
+import { TouchableOpacityWithReset } from '../../components/TouchableOpacityWithReset';
 
 const opcijePopis = () => {
 
@@ -541,12 +541,12 @@ const opcijePopis = () => {
             </TouchableOpacity>
             </>
           ) : (
-            <TouchableOpacity
+            <TouchableOpacityWithReset
             className="absolute top-4 right-4 bg-secondary rounded-md items-center"
             onPress={logoutConfirm}
             >
               <AntDesign name="logout" size={42} color="#AA0000" />
-            </TouchableOpacity>
+            </TouchableOpacityWithReset>
           )}
 
           {/* Icon and Info Row */}
@@ -593,7 +593,7 @@ const opcijePopis = () => {
               ))}
             </Picker>
           </View>
-          <TouchableOpacity
+          <TouchableOpacityWithReset
               className={`ml-2 px-6 py-4 rounded ${
                 selectedPopis ? "bg-red-500"  : "bg-gray-400 text-primary"
               }`}
@@ -601,7 +601,7 @@ const opcijePopis = () => {
               onPress={() => {deleteConfirm(selectedPopis?.id_popis === undefined ? 0 : selectedPopis.id_popis)}}
             >
               <Text className="text-white font-bold">Izbriši Popis</Text>
-            </TouchableOpacity>
+            </TouchableOpacityWithReset>
         </View>
 
         {selectedPopis && (
@@ -678,7 +678,7 @@ const opcijePopis = () => {
                           {matchingPice?.naziv || 'N/A'}
                         </Text>
 
-                        <TextInput
+                        <TextInputWithReset
                           keyboardType='number-pad'
                           className="w-32 text-center text-lg text-gray-700 py-2 mx-1 border rounded-md my-2 bg-gray-100 border-gray-400"
                           value={values.pocetak}
@@ -686,7 +686,7 @@ const opcijePopis = () => {
                         />
 
                         {matchingPice?.type !== "other" ? (
-                          <TextInput
+                          <TextInputWithReset
                             keyboardType="number-pad"
                             className="w-32 text-center text-lg text-gray-700 py-2 mx-1 border rounded-md my-2 bg-gray-100 border-gray-400"
                             value={values.uneto}
@@ -698,7 +698,7 @@ const opcijePopis = () => {
                           </Text>
                         )}
 
-                        <TextInput
+                        <TextInputWithReset
                           keyboardType='default'
                           className="w-32 text-center text-lg text-gray-700 py-2 mx-1 border rounded-md my-2 bg-gray-100 border-gray-400"
                           value={localExpressions[stavka.id_stavka_popisa] || ''}
@@ -751,21 +751,21 @@ const opcijePopis = () => {
               <Text className="flex-1 text-center text-white text-lg font-bold py-2">Ukupno</Text>
             </View>
             <View className="flex flex-row border-b">
-              <TextInput
+              <TextInputWithReset
               keyboardType='number-pad'
               className="flex-1 text-center text-lg text-gray-700 py-2 border rounded-md my-2 bg-gray-100 border-gray-400"
               value={prihodiValues.kuhinja}
               onChangeText={(value) => handlePrihodiChange('kuhinja', value)}
               />
 
-              <TextInput
+              <TextInputWithReset
               keyboardType='number-pad'
               className="flex-1 text-center text-lg text-gray-700 py-2 border rounded-md my-2 bg-gray-100 border-gray-400"
               value={prihodiValues.kuhinjaSt}
               onChangeText={(value) => handlePrihodiChange('kuhinjaSt', value)}
               />
 
-              <TextInput
+              <TextInputWithReset
               keyboardType='number-pad'
               className="flex-1 text-center text-lg text-gray-700 py-2 border rounded-md my-2 bg-gray-100 border-gray-400"
               value={evaluateExpression(prihodiValues.ostalop)}
@@ -784,7 +784,7 @@ const opcijePopis = () => {
               <Text className="flex-1 text-center font-bold text-lg text-gray-600 py-2">Opis Ostalih Prihoda</Text>
             </View>
             <View className="flex flex-row">
-              <TextInput
+              <TextInputWithReset
               className="flex-1 text-center text-lg text-gray-700 py-2 border rounded-md bg-gray-100 border-gray-400"
               value={prihodiValues.ostalopOpis}
               onChangeText={(value) => handlePrihodiChange('ostalopOpis', value)}
@@ -813,42 +813,42 @@ const opcijePopis = () => {
 
                 {/* Inputs under Titles */}
                 <View className="flex-row border-b">
-                  <TextInput
+                  <TextInputWithReset
                     keyboardType="number-pad"
                     className="w-28 text-center text-gray-700 text-lg py-2 border rounded-md my-2 bg-gray-100 border-gray-400"
                     value={evaluateExpression(troskoviValues.wolt)}
                     onChangeText={(value) => handleTroskoviChange("wolt", value)}
                   />
 
-                  <TextInput
+                  <TextInputWithReset
                     keyboardType="number-pad"
                     className="w-28 text-center text-gray-700 text-lg py-2 border rounded-md my-2 bg-gray-100 border-gray-400"
                     value={evaluateExpression(troskoviValues.glovo)}
                     onChangeText={(value) => handleTroskoviChange("glovo", value)}
                   />
 
-                  <TextInput
+                  <TextInputWithReset
                     keyboardType="number-pad"
                     className="w-28 text-center text-gray-700 text-lg py-2 border rounded-md my-2 bg-gray-100 border-gray-400"
                     value={evaluateExpression(troskoviValues.sale)}
                     onChangeText={(value) => handleTroskoviChange("sale", value)}
                   />
 
-                  <TextInput
+                  <TextInputWithReset
                     keyboardType="number-pad"
                     className="w-28 text-center text-gray-700 text-lg py-2 border rounded-md my-2 bg-gray-100 border-gray-400"
                     value={evaluateExpression(troskoviValues.kartice)}
                     onChangeText={(value) => handleTroskoviChange("kartice", value)}
                   />
 
-                  <TextInput
+                  <TextInputWithReset
                     keyboardType="number-pad"
                     className="w-28 text-center text-gray-700 text-lg py-2 border rounded-md my-2 bg-gray-100 border-gray-400"
                     value={evaluateExpression(troskoviValues.ostalot)}
                     onChangeText={(value) => handleTroskoviChange("ostalot", value)}
                   />
 
-                  <TextInput
+                  <TextInputWithReset
                     keyboardType="number-pad"
                     className="w-28 text-center text-gray-700 text-lg py-2 border rounded-md my-2 bg-gray-100 border-gray-400"
                     value={evaluateExpression(troskoviValues.virman)}
@@ -869,13 +869,13 @@ const opcijePopis = () => {
                 <Text className="flex-1 text-center font-bold text-gray-600 text-lg py-2">Opis Virmana</Text>
               </View>
               <View className="flex flex-row">
-              <TextInput
+              <TextInputWithReset
               className="flex-1 text-center text-gray-700 text-lg py-2 border rounded-md bg-gray-100 border-gray-400"
               value={troskoviValues.ostalotOpis}
               onChangeText={(value) => handleTroskoviChange('ostalotOpis', value)}
               />
 
-              <TextInput
+              <TextInputWithReset
               className="flex-1 text-center text-gray-700 text-lg py-2 border rounded-md bg-gray-100 border-gray-400"
               value={troskoviValues.virmanOpis}
               onChangeText={(value) => handleTroskoviChange('virmanOpis', value)}
@@ -885,14 +885,14 @@ const opcijePopis = () => {
             
           </View>
           <View className="flex flex-row justify-center rounded-lg bg-white mt-4">
-          <TouchableOpacity 
+          <TouchableOpacityWithReset 
               className="w-7/12 bg-orange py-4 rounded-lg"
               onPress={updateConfirm}
               >
               <Text className="text-black text-center text-lg font-bold">
                   Promeni Popis
               </Text>
-          </TouchableOpacity>
+          </TouchableOpacityWithReset>
           </View>
         </>
       )}

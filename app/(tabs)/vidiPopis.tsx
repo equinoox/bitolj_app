@@ -10,6 +10,7 @@ import { useSQLiteContext } from 'expo-sqlite';
 import { useFocusEffect } from 'expo-router';
 import  PdfGenerator  from '../../components/PdfGenerator';
 import { SessionExpiredOverlay } from '../../components/SessionExpiredOverlay';
+import { TouchableOpacityWithReset } from '../../components/TouchableOpacityWithReset';
 
 
 const VidiPopis = () => {
@@ -241,7 +242,7 @@ const VidiPopis = () => {
                 ))}
               </Picker>
             </View>
-            <TouchableOpacity
+            <TouchableOpacityWithReset
               className={`ml-2 px-6 py-4 rounded ${
                 selectedPopis ? "bg-orange" : "bg-gray-400 text-primary"
               }`}
@@ -249,7 +250,7 @@ const VidiPopis = () => {
               disabled={!selectedPopis}
             >
               <Text className="text-white font-bold">Štampaj Popis</Text>
-            </TouchableOpacity>
+            </TouchableOpacityWithReset>
             {selectedPopis && (
               <PdfGenerator
                 visible={isModalVisible}

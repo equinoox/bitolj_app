@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native'
+import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native'
 import { router } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
 import { useState, useCallback, useEffect } from 'react'
@@ -7,13 +7,13 @@ import { useSQLiteContext } from 'expo-sqlite';
 import { useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { FontAwesome5, MaterialIcons, AntDesign, Entypo } from '@expo/vector-icons';
-import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import DialogModal from '@/components/DialogModal';
 import DialogModalN from '@/components/DialogModalN';
 import PTDialogModal from '@/components/PTDialogModal';
 import { SessionExpiredOverlay } from '../../components/SessionExpiredOverlay';
 import { TextInputWithReset } from '../../components/TextInputWithReset';
+import { TouchableOpacityWithReset } from '../../components/TouchableOpacityWithReset';
 import React from 'react'
 
 
@@ -846,12 +846,12 @@ const Popis = () => {
             >
               <AntDesign name="logout" size={42} color="#AA0000" />
             </TouchableOpacity>
-            <TouchableOpacity
+            <TouchableOpacityWithReset
             className="absolute top-4 right-6 bg-secondary rounded-md items-center"
             onPress={() => router.push("/changeLogs")}
             >
               <FontAwesome5 name="bookmark" size={42} color="#FFA500" />
-            </TouchableOpacity>
+            </TouchableOpacityWithReset>
             </>
           ) : (
             <TouchableOpacity
@@ -933,7 +933,7 @@ const Popis = () => {
                       {userData?.role === "admin" || userData?.role === "manager" ? (
                         <View className="w-32 flex-row h-14 overflow-hidden">
                           <View className="flex-1 border border-r-0 border-gray-400 rounded-l-md overflow-hidden">
-                            <TextInput
+                            <TextInputWithReset
                               className="flex-1 h-full text-center px-2 text-xl bg-gray-100"
                               keyboardType="number-pad"
                               placeholder="0"
@@ -942,12 +942,12 @@ const Popis = () => {
                               onBlur={() => handleBlur(item, inputValues[item.id_pice]?.pocetak, "Početak")}
                             />
                           </View>
-                          <TouchableOpacity 
+                          <TouchableOpacityWithReset 
                             className="border border-gray-400 rounded-r-md bg-gray-200 justify-center items-center w-8"
                             onPress={copyPocetakToKraj}
                           >
                             <Entypo name="triangle-right" size={15} color="black"/>
-                          </TouchableOpacity>
+                          </TouchableOpacityWithReset>
                         </View>
                       ) : (
                         <View className="w-32 flex-row h-14 overflow-hidden">
@@ -956,12 +956,12 @@ const Popis = () => {
                               {inputValues[item.id_pice]?.pocetak || "0"}
                             </Text>
                           </View>
-                          <TouchableOpacity 
+                          <TouchableOpacityWithReset 
                             className="border border-gray-400 rounded-r-md bg-gray-200 justify-center items-center w-8"
                             onPress={copyPocetakToKraj}
                           >
                             <Entypo name="triangle-right" size={15} color="black" />
-                          </TouchableOpacity>
+                          </TouchableOpacityWithReset>
                         </View>
                       )}
 
@@ -970,14 +970,14 @@ const Popis = () => {
                         <Text className="w-28 text-center text-xl h-14 flex items-center justify-center">N/A</Text>
                       ) : (
                         <>
-                          <TouchableOpacity
+                          <TouchableOpacityWithReset
                             className="w-28 h-14 border border-gray-400 rounded-md bg-gray-100 justify-center items-center"
                             onPress={() => handleDialogPressN(item.id_pice)}
                           >
                             <Text className="text-xl">
                               {calculateEx(inputValues[item.id_pice]?.uneto || '0').toString()}
                             </Text>
-                          </TouchableOpacity>
+                          </TouchableOpacityWithReset>
                           
                           <DialogModalN
                             visible={modalVisibleN && currentIdN === item.id_pice}
@@ -996,12 +996,12 @@ const Popis = () => {
                       )}
 
                       {/* Kraj Input - taller */}
-                      <TouchableOpacity
+                      <TouchableOpacityWithReset
                         className="w-28 h-14 border border-gray-400 rounded-md bg-gray-100 justify-center items-center"
                         onPress={() => handleDialogPress(item.id_pice)}
                       >
                         <Text className="text-xl">{calculateSum(inputValues[item.id_pice]?.kraj || '0').toString()}</Text>
-                      </TouchableOpacity>
+                      </TouchableOpacityWithReset>
 
                       <DialogModal
                         visible={modalVisible && currentId === item.id_pice}
@@ -1046,7 +1046,7 @@ const Popis = () => {
         <View className="flex flex-row py-2 border-b border-black">
           <View className="flex-1 px-2">
             <Text className="text-left pl-1 font-semibold mb-1">Kuhinja</Text>
-            <TextInput
+            <TextInputWithReset
               className="h-14 border border-gray-400 rounded px-2"
               keyboardType="number-pad"
               value={PTInptus.kuhinja}
@@ -1058,7 +1058,7 @@ const Popis = () => {
           </View>
           <View className="flex-1 px-2">
             <Text className="text-left pl-1 font-semibold mb-1">Kuhinja Storno</Text>
-            <TextInput
+            <TextInputWithReset
               className="h-14 border border-gray-400 rounded px-2"
               keyboardType="number-pad"
               value={PTInptus.ks}
@@ -1073,7 +1073,7 @@ const Popis = () => {
         <View className="flex flex-row py-2 border-b border-black">
           <View className="w-1/3 px-2">
             <Text className="text-left pl-1 font-semibold mb-1">Ostali Prihodi</Text>
-            <TouchableOpacity className='h-14 border border-gray-400 rounded px-2 justify-center items-start' onPress={handleOpenDialogPrihodi}>
+            <TouchableOpacityWithReset className='h-14 border border-gray-400 rounded px-2 justify-center items-start' onPress={handleOpenDialogPrihodi}>
             <Text className={PTInptus.ostalop === "" ? "text-gray-400" : "text-black"}>
               {PTInptus.ostalop === "" 
                 ? "Unesi prihode..." 
@@ -1083,7 +1083,7 @@ const Popis = () => {
                     .toString()
               }
             </Text>
-            </TouchableOpacity>
+            </TouchableOpacityWithReset>
             <PTDialogModal
               initialValue={PTInptus.ostalop}
               onConfirm={handleChangePrihodi}
@@ -1093,7 +1093,7 @@ const Popis = () => {
           </View>
           <View className="w-2/3 px-2">
             <Text className="text-left pl-1 font-semibold mb-1">Ostali Prihodi Opis</Text>
-            <TextInput
+            <TextInputWithReset
               className="h-14 border border-gray-400 rounded px-2"
               value={PTInptus.ostalopOpis}
               onChangeText={(value: string) =>
@@ -1111,7 +1111,7 @@ const Popis = () => {
         <View className="flex flex-row py-2 border-b border-black">
           <View className="flex-1 px-2">
             <Text className="text-left pl-1 font-semibold mb-1">Wolt</Text>
-            <TouchableOpacity className='h-14 border border-gray-400 rounded px-2 justify-center items-start' onPress={handleOpenDialogWolt}>
+            <TouchableOpacityWithReset className='h-14 border border-gray-400 rounded px-2 justify-center items-start' onPress={handleOpenDialogWolt}>
             <Text className={PTInptus.wolt === "" ? "text-gray-400" : "text-black"}>
             {PTInptus.wolt === "" 
               ? "Unesi wolt..." 
@@ -1121,7 +1121,7 @@ const Popis = () => {
                   .toString()
               }
             </Text>
-            </TouchableOpacity>
+            </TouchableOpacityWithReset>
             <PTDialogModal
               initialValue={PTInptus.wolt}
               onConfirm={handleChangeWolt}
@@ -1131,7 +1131,7 @@ const Popis = () => {
           </View>
           <View className="flex-1 px-2">
             <Text className="text-left pl-1 font-semibold mb-1">Glovo</Text>
-            <TouchableOpacity className='h-14 border border-gray-400 rounded px-2 justify-center items-start' onPress={handleOpenDialogGlovo}>
+            <TouchableOpacityWithReset className='h-14 border border-gray-400 rounded px-2 justify-center items-start' onPress={handleOpenDialogGlovo}>
             <Text className={PTInptus.glovo === "" ? "text-gray-400" : "text-black"}>
             {PTInptus.glovo === "" 
               ? "Unesi glovo..." 
@@ -1141,7 +1141,7 @@ const Popis = () => {
                   .toString()
               }
             </Text>
-            </TouchableOpacity>
+            </TouchableOpacityWithReset>
             <PTDialogModal
               initialValue={PTInptus.glovo}
               onConfirm={handleChangeGlovo}
@@ -1154,7 +1154,7 @@ const Popis = () => {
         <View className="flex flex-row py-2 border-b border-black">
           <View className="flex-1 px-2">
             <Text className="text-left pl-1 font-semibold mb-1">Sale</Text>
-            <TouchableOpacity className='h-14 border border-gray-400 rounded px-2 justify-center items-start' onPress={handleOpenDialogSale}>
+            <TouchableOpacityWithReset className='h-14 border border-gray-400 rounded px-2 justify-center items-start' onPress={handleOpenDialogSale}>
             <Text className={PTInptus.sale === "" ? "text-gray-400" : "text-black"}>
             {PTInptus.sale === "" 
               ? "Unesi sale..." 
@@ -1164,7 +1164,7 @@ const Popis = () => {
                   .toString()
               }
             </Text>
-            </TouchableOpacity>
+            </TouchableOpacityWithReset>
             <PTDialogModal
               initialValue={PTInptus.sale}
               onConfirm={handleChangeSale}
@@ -1174,7 +1174,7 @@ const Popis = () => {
           </View>
           <View className="flex-1 px-2">
             <Text className="text-left pl-1 font-semibold mb-1">Kartice</Text>
-            <TouchableOpacity className='h-14 border border-gray-400 rounded px-2 justify-center items-start' onPress={handleOpenDialogKartice}>
+            <TouchableOpacityWithReset className='h-14 border border-gray-400 rounded px-2 justify-center items-start' onPress={handleOpenDialogKartice}>
             <Text className={PTInptus.kartice === "" ? "text-gray-400" : "text-black"}>
             {PTInptus.kartice === "" 
               ? "Unesi kartice..." 
@@ -1184,7 +1184,7 @@ const Popis = () => {
                   .toString()
               }
             </Text>
-            </TouchableOpacity>
+            </TouchableOpacityWithReset>
             <PTDialogModal
               initialValue={PTInptus.kartice}
               onConfirm={handleChangeKartice}
@@ -1198,7 +1198,7 @@ const Popis = () => {
         <View className="flex flex-row py-2 border-b border-black">
           <View className="w-1/3 px-2">
             <Text className="text-left pl-1 font-semibold mb-1">Ostali Troškovi</Text>
-            <TouchableOpacity className='h-14 border border-gray-400 rounded px-2 justify-center items-start' onPress={handleOpenDialogTroskovi}>
+            <TouchableOpacityWithReset className='h-14 border border-gray-400 rounded px-2 justify-center items-start' onPress={handleOpenDialogTroskovi}>
             <Text className={PTInptus.ostalot === "" ? "text-gray-400" : "text-black"}>
               {PTInptus.ostalot === "" 
                 ? "Unesi troškove..." 
@@ -1208,7 +1208,7 @@ const Popis = () => {
                     .toString()
               }
             </Text>
-            </TouchableOpacity>
+            </TouchableOpacityWithReset>
             <PTDialogModal
               initialValue={PTInptus.ostalot}
               onConfirm={handleChangeTroskovi}
@@ -1218,7 +1218,7 @@ const Popis = () => {
           </View>
           <View className="w-2/3 px-2">
             <Text className="text-left pl-1 font-semibold mb-1">Ostali Troškovi Opis</Text>
-            <TextInput
+            <TextInputWithReset
               className="h-14 border border-gray-400 rounded px-2"
               value={PTInptus.ostalotOpis}
               onChangeText={(value: string) => 
@@ -1233,7 +1233,7 @@ const Popis = () => {
         <View className="flex flex-row py-2 border-b border-black">
           <View className="w-1/3 px-2">
             <Text className="text-left pl-1 font-semibold mb-1">Virman</Text>
-            <TouchableOpacity className='h-14 border border-gray-400 rounded px-2 justify-center items-start' onPress={handleOpenDialogVirman}>
+            <TouchableOpacityWithReset className='h-14 border border-gray-400 rounded px-2 justify-center items-start' onPress={handleOpenDialogVirman}>
             <Text className={PTInptus.virman === "" ? "text-gray-400" : "text-black"}>
               {PTInptus.virman === "" 
                 ? "Unesi virmane..." 
@@ -1243,7 +1243,7 @@ const Popis = () => {
                     .toString()
               }
             </Text>
-            </TouchableOpacity>
+            </TouchableOpacityWithReset>
             <PTDialogModal
               initialValue={PTInptus.virman}
               onConfirm={handleChangeVirman}
@@ -1253,7 +1253,7 @@ const Popis = () => {
           </View>
           <View className="w-2/3 px-2">
             <Text className="text-left pl-1 font-semibold mb-1">Virman Opis</Text>
-            <TextInput
+            <TextInputWithReset
               className="h-14 border border-gray-400 rounded px-2"
               value={PTInptus.virmanOpis}
               onChangeText={(value: string) => 
@@ -1268,14 +1268,14 @@ const Popis = () => {
       <View className="m-4 mt-2 bg-primary rounded-lg p-4">
         {/* First row with button and picker */}
         <View className="mb-4 flex-row items-center justify-between">
-          <TouchableOpacity
+          <TouchableOpacityWithReset
             className="w-7/12 bg-orange py-4 rounded-lg"
             onPress={popisConfirm}
           >
             <Text className="text-black text-center text-lg font-bold">
               Završi Popis
             </Text>
-          </TouchableOpacity>
+          </TouchableOpacityWithReset>
           <View className="w-2/6 bg-white rounded-lg border border-gray-300">
             <Picker
               selectedValue={otherInputs.smena}
@@ -1292,7 +1292,7 @@ const Popis = () => {
       </View>
       {userData?.role === "admin" && (
       <View className="mb-4 bg-white rounded-lg border border-gray-300 w-full">
-          <TextInput
+          <TextInputWithReset
             placeholder="Unesi datum (YYYY-MM-DD)"
             value={otherInputs.datum}
             onChangeText={handleDateChange}

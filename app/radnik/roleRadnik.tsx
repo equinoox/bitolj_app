@@ -1,4 +1,4 @@
-import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native'
+import { View, Text, SafeAreaView, ScrollView, Alert } from 'react-native'
 import { useState, useCallback, useEffect } from 'react'
 import { Picker } from '@react-native-picker/picker';
 import { useSQLiteContext } from 'expo-sqlite';
@@ -8,6 +8,7 @@ import React from 'react'
 import { useAuth } from '../../contexts/AuthContext';
 import { router } from 'expo-router';
 import { SessionExpiredOverlay } from '../../components/SessionExpiredOverlay';
+import { TouchableOpacityWithReset } from '../../components/TouchableOpacityWithReset';
 
 const roleRadnik = () => {
 
@@ -108,7 +109,7 @@ const roleRadnik = () => {
     
                     {/* Table Data */}
                     {data.map((item) => (
-                        <TouchableOpacity
+                        <TouchableOpacityWithReset
                             key={item.id_korisnik}
                             className={`flex-row justify-between items-center border-b border-gray-300 py-3 ${
                                 selectedRow?.id_korisnik === item.id_korisnik ? "bg-orange" : ""
@@ -127,7 +128,7 @@ const roleRadnik = () => {
                                     item.role}
                                 </Text>
                             </View>
-                        </TouchableOpacity>
+                        </TouchableOpacityWithReset>
                     ))}
     
                     {/* Selected Row Information */}
@@ -139,12 +140,12 @@ const roleRadnik = () => {
                             
                             {/* Action Buttons */}
                             <View className='w-full flex-row justify-center mt-4'>
-                                <TouchableOpacity 
+                                <TouchableOpacityWithReset 
                                     className='bg-orange mx-2 items-center w-1/3 rounded-md py-4'
                                     onPress={handleTypes}
                                 >
                                     <Text>Izmeni</Text>
-                                </TouchableOpacity>
+                                </TouchableOpacityWithReset>
                             </View>
                             <View className='mt-4 justify-center items-center'>
                             <View className="w-1/2 bg-white border border-gray-300 rounded-lg overflow-hidden shadow-md ml-2 mt-3">

@@ -179,7 +179,7 @@ const changeLogs: React.FC = () => {
         {/* Table Data */}
         {data.map((item: ChangeLogItem) => (
           <View key={item.change_id} className="flex-row p-3 border-b border-gray-200">
-            <Text className="flex-1">ID: {item.change_id} {item.korisnik_name} {item.korisnik_surname}</Text>
+            <Text className="flex-1">{item.korisnik_name} {item.korisnik_surname}</Text>
             <Text className="flex-1">{item.pice_name}</Text>
             <Text className="flex-1">{item.column}</Text>
             <Text className="flex-1">{item.old_value}</Text>

@@ -1,5 +1,5 @@
 import React from 'react'
-import { Text, View, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native'
+import { Text, View, SafeAreaView, ScrollView } from 'react-native'
 import { useState, useCallback } from 'react'
 import { useSQLiteContext } from 'expo-sqlite';
 import { useFocusEffect } from 'expo-router';
@@ -7,6 +7,7 @@ import { Pice } from '@/models/Pice';
 import { useAuth } from '../../contexts/AuthContext';
 import { router } from 'expo-router';
 import { SessionExpiredOverlay } from '../../components/SessionExpiredOverlay';
+import { TouchableOpacityWithReset } from '../../components/TouchableOpacityWithReset';
 
 const listaPice = () => {
 
@@ -56,7 +57,7 @@ const listaPice = () => {
     
                     {/* Table Data */}
                     {data.map((item) => (
-                        <TouchableOpacity
+                        <TouchableOpacityWithReset
                             key={item.id_pice}
                             className={`flex-row justify-between items-center border-b border-gray-300 py-3 ${
                                 selectedRow?.id_pice === item.id_pice ? "bg-orange" : ""
@@ -81,7 +82,7 @@ const listaPice = () => {
                             <Text className="flex-1 text-center">
                                 {item.position !== null ? `${item.position}` : 'N/A'}
                             </Text>
-                        </TouchableOpacity>
+                        </TouchableOpacityWithReset>
                     ))}
                 </View>
             </ScrollView>

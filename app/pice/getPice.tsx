@@ -1,4 +1,4 @@
-import { Text, View, SafeAreaView, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native'
+import { Text, View, SafeAreaView, ScrollView, Alert } from 'react-native'
 import { useState, useCallback, useEffect } from 'react'
 import { Picker } from '@react-native-picker/picker';
 import { useSQLiteContext } from 'expo-sqlite';
@@ -7,6 +7,8 @@ import { Pice } from '@/models/Pice';
 import { useAuth } from '../../contexts/AuthContext';
 import { router } from 'expo-router';
 import { SessionExpiredOverlay } from '../../components/SessionExpiredOverlay';
+import { TextInputWithReset } from '../../components/TextInputWithReset';
+import { TouchableOpacityWithReset } from '../../components/TouchableOpacityWithReset';
 
 
 // SHOW ALL PICE, CHOSEN PICE UPDATE OR DELETE
@@ -160,7 +162,7 @@ const getPice = () => {
     
                     {/* Table Data */}
                     {data.map((item) => (
-                        <TouchableOpacity
+                        <TouchableOpacityWithReset
                             key={item.id_pice}
                             className={`flex-row justify-between border-b border-gray-300 py-3 ${
                                 selectedRow?.id_pice === item.id_pice ? "bg-orange" : ""
@@ -176,7 +178,7 @@ const getPice = () => {
                                 {item.type === 'other' && 'Ostalo'}
                             </Text>
                             <Text className="flex-1 text-center">{item.position !== null ? `${item.position}` : 'N/A'}</Text>
-                        </TouchableOpacity>
+                        </TouchableOpacityWithReset>
                     ))}
     
                     {/* Selected Item Form */}
@@ -188,25 +190,25 @@ const getPice = () => {
     
                             {/* Action Buttons */}
                             <View className='w-full flex-row justify-center mt-4'>
-                                <TouchableOpacity 
+                                <TouchableOpacityWithReset 
                                     className='bg-orange mx-2 items-center w-1/3 rounded-md py-4'
                                     onPress={async () => handleTypes()}
                                 >
                                     <Text>Promeni Piće</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity 
+                                </TouchableOpacityWithReset>
+                                <TouchableOpacityWithReset 
                                     className='bg-red-500 mx-2 items-center w-1/3 rounded-md py-4'
                                     onPress={async () => handleDelete()}
                                 >
                                     <Text>Izbriši Piće</Text>
-                                </TouchableOpacity>
+                                </TouchableOpacityWithReset>
                             </View>
     
                             {/* Edit Form */}
                             <View className="mt-6 w-full items-center">
                                 <View className="w-full max-w-md">
                                     <Text className='text-center font-medium text-gray-700 text-lg mb-2'>Naziv</Text>
-                                    <TextInput
+                                    <TextInputWithReset
                                         placeholder='Naziv'
                                         value={naziv}
                                         onChangeText={(text) => setNaziv(text)}
@@ -215,7 +217,7 @@ const getPice = () => {
     
                                     <Text className='text-center mt-2 text-lg font-medium text-gray-700'>Cena</Text>
                                     <View className="relative w-full mt-2">
-                                        <TextInput
+                                        <TextInputWithReset
                                         placeholder='Cena'
                                         value={cena}
                                         keyboardType="number-pad"
@@ -223,12 +225,12 @@ const getPice = () => {
                                         className='w-full border border-gray-300 bg-white rounded-md p-3 text-gray-700 pr-12'
                                         />
                                         {/* Button inside the input */}
-                                        <TouchableOpacity
+                                        <TouchableOpacityWithReset
                                         onPress={handleAddDot}
                                         className="absolute h-10 w-10 right-2 top-2 p-2 bg-gray-200 rounded-md"
                                         >
                                         <Text className="text-sm font-bold text-gray-600">.</Text>
-                                        </TouchableOpacity>
+                                        </TouchableOpacityWithReset>
                                     </View>
     
                                     <Text className='text-center text-lg my-2 font-medium text-gray-700'>Tip & Pozicija</Text>
@@ -249,7 +251,7 @@ const getPice = () => {
                                     </View>
 
                                     {/* TextInput */}
-                                    <TextInput
+                                    <TextInputWithReset
                                         value={position}
                                         onChangeText={setPosition}
                                         keyboardType="numeric"

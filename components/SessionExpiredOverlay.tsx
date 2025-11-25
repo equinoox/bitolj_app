@@ -21,7 +21,7 @@ export const SessionExpiredOverlay = ({ visible, onLogout }: SessionExpiredOverl
           
           
           <Text className="text-white text-3xl font-bold text-center mt-6">
-            Sesija je Istekla
+            Istekla Sesija
           </Text>
           
           <Text className="text-text_color_2 text-lg text-center mt-4">

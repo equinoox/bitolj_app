@@ -1,5 +1,5 @@
-import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native'
-import { useState, useCallback, useEffect } from 'react'
+import { View, Text, SafeAreaView, ScrollView, Alert } from 'react-native'
+import { useState, useCallback } from 'react'
 import { useSQLiteContext } from 'expo-sqlite';
 import { useFocusEffect } from 'expo-router';
 import { Korisnik } from '@/models/Korisnik';
@@ -7,6 +7,8 @@ import React from 'react'
 import { useAuth } from '../../contexts/AuthContext';
 import { router } from 'expo-router';
 import { SessionExpiredOverlay } from '../../components/SessionExpiredOverlay';
+import { TextInputWithReset } from '../../components/TextInputWithReset';
+import { TouchableOpacityWithReset } from '../../components/TouchableOpacityWithReset';
 
 const passRadnik = () => {
 
@@ -91,7 +93,7 @@ const passRadnik = () => {
 
                 {/* Table Data */}
                 {data.map((item) => (
-                    <TouchableOpacity
+                    <TouchableOpacityWithReset
                         key={item.id_korisnik}
                         className={`flex-row justify-between items-center border-b border-gray-300 py-3 ${
                             selectedRow?.id_korisnik === item.id_korisnik ? "bg-orange" : ""
@@ -110,7 +112,7 @@ const passRadnik = () => {
                                 item.role}
                             </Text>
                         </View>
-                    </TouchableOpacity>
+                    </TouchableOpacityWithReset>
                 ))}
 
                 {/* Selected Row Information */}
@@ -122,16 +124,16 @@ const passRadnik = () => {
                         
                         {/* Action Buttons */}
                         <View className='w-full flex-row justify-center mt-4'>
-                            <TouchableOpacity 
+                            <TouchableOpacityWithReset 
                                 className='bg-orange mx-2 items-center w-1/3 rounded-md py-4'
                                 onPress={handleTypes}
                             >
                                 <Text>Izmeni</Text>
-                            </TouchableOpacity>
+                            </TouchableOpacityWithReset>
                         </View>
                         <View className='mt-4 justify-center items-center'>
                         <Text className='text-center'>Nova šifra</Text>
-                          <TextInput
+                          <TextInputWithReset
                             keyboardType='number-pad'
                             placeholder='Nova šifra'
                             value={sifra}
@@ -139,7 +141,7 @@ const passRadnik = () => {
                             className='w-3/4 mt-2 border border-gray-300 bg-white rounded-md p-3 text-gray-700'
                           />
                           <Text className='text-center mt-2'>Potvrdi šifru</Text>
-                          <TextInput
+                          <TextInputWithReset
                             keyboardType='number-pad'
                             placeholder='Potvrdi šifru'
                             value={cSifra}

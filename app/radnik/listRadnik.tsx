@@ -1,4 +1,4 @@
-import { View, Text, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native'
+import { View, Text, SafeAreaView, ScrollView } from 'react-native'
 import { useState, useCallback } from 'react'
 import { useSQLiteContext } from 'expo-sqlite';
 import { useFocusEffect } from 'expo-router';
@@ -7,6 +7,7 @@ import React from 'react'
 import { useAuth } from '../../contexts/AuthContext';
 import { router } from 'expo-router';
 import { SessionExpiredOverlay } from '../../components/SessionExpiredOverlay';
+import { TouchableOpacityWithReset } from '../../components/TouchableOpacityWithReset';
 
 const listRadnik = () => {
 
@@ -57,7 +58,7 @@ const listRadnik = () => {
 
                 {/* Table Data */}
                 {data.map((item) => (
-                    <TouchableOpacity
+                    <TouchableOpacityWithReset
                         key={item.id_korisnik}
                         className={`flex-row justify-between items-center border-b border-gray-300 py-3 ${
                             selectedRow?.id_korisnik === item.id_korisnik ? "bg-orange" : ""
@@ -76,7 +77,7 @@ const listRadnik = () => {
                                  item.role}
                             </Text>
                         </View>
-                    </TouchableOpacity>
+                    </TouchableOpacityWithReset>
                 ))}
             </View>
         </ScrollView>
