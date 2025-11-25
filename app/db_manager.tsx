@@ -94,8 +94,9 @@ const DatabaseManagement = () => {
       const dbPath = `${sqliteDir}/bitolj.db`;
       
       // Generate unique timestamp for filename with readable format
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      const backupFileName = `bitolj_backup_${timestamp}.db`;
+      const date = new Date();
+      const timestamp = `${date.getDate().toString().padStart(2, '0')}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getFullYear()}_${date.getHours().toString().padStart(2, '0')}-${date.getMinutes().toString().padStart(2, '0')}`;
+      const backupFileName = `${timestamp}.db`;
       const tempBackupPath = `${FileSystem.cacheDirectory}${backupFileName}`;
       
       // Verify source DB exists

@@ -2,11 +2,13 @@ import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FontAwesome5, MaterialIcons, AntDesign  } from '@expo/vector-icons';
 import { useAuth } from '../../contexts/AuthContext';
+import { SessionExpiredOverlay } from '../../components/SessionExpiredOverlay';
 import { router } from 'expo-router';
 import React from 'react'
+import { TouchableOpacityWithReset } from '@/components/TouchableOpacityWithReset';
 
 const Proizvodi = () => {
-  const { userData, setUserData } = useAuth();
+  const { userData, isSessionExpired, setUserData, resetInactivityTimeout } = useAuth();
   const logoutConfirm = () => {
     Alert.alert(
       "Log Out",
@@ -33,6 +35,13 @@ const Proizvodi = () => {
 
   return (
     <SafeAreaView className= "flex-1">
+        <View
+        className="flex-1"
+        onStartShouldSetResponder={() => {
+          resetInactivityTimeout();
+          return false;
+        }}
+      >
       <ScrollView contentContainerStyle={{flexGrow: 1}}>
         
         {/* Header */}
@@ -70,51 +79,56 @@ const Proizvodi = () => {
           <View className="mt-4 w-full border-t-2 border-black"/>
           {userData?.role === 'admin' ? (
             <>
-              <TouchableOpacity 
+              <TouchableOpacityWithReset 
                 className='mt-4 bg-orange items-center w-2/4 rounded-md py-4 px-4'
                 onPress={() => router.push("/pice/listPice")}
               >
                 <Text>Lista Pića</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
+              </TouchableOpacityWithReset>
+              <TouchableOpacityWithReset 
                 className='mt-4 bg-orange items-center w-2/4 rounded-md py-4 px-4'
                 onPress={() => router.push("/pice/getPice")}
               >
                 <Text>Promeni/Obriši Piće</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
+              </TouchableOpacityWithReset>
+              <TouchableOpacityWithReset 
                 className='mt-4 bg-orange items-center w-2/4 rounded-md py-4 px-4'
                 onPress={() => router.push("/pice/addPice")}
               >
                 <Text>Dodaj Piće</Text>
-              </TouchableOpacity>
+              </TouchableOpacityWithReset>
             </>
           ) : userData?.role === 'manager' ? (
             <>
-              <TouchableOpacity 
+              <TouchableOpacityWithReset 
                 className='mt-4 bg-orange items-center w-2/4 rounded-md py-4 px-4'
                 onPress={() => router.push("/pice/listPice")}
               >
                 <Text>Lista Pića</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
+              </TouchableOpacityWithReset>
+              <TouchableOpacityWithReset 
                 className='mt-4 bg-orange items-center w-2/4 rounded-md py-4 px-4'
                 onPress={() => router.push("/pice/addPice")}
               >
                 <Text>Dodaj Piće</Text>
-              </TouchableOpacity>
+              </TouchableOpacityWithReset>
             </>
           ) : (
             // Non-admin content
-            <TouchableOpacity 
+            <TouchableOpacityWithReset 
             className='mt-4 bg-orange items-center w-2/4 rounded-md py-4 px-4'
             onPress={() => router.push("/pice/listPice")}
             >
               <Text>Lista Pića</Text>
-            </TouchableOpacity>
+            </TouchableOpacityWithReset>
           )}
         </View>
       </ScrollView>
+      </View>
+      <SessionExpiredOverlay
+        visible={isSessionExpired}
+        onLogout={logout}
+      />
     </SafeAreaView>
   );
 }

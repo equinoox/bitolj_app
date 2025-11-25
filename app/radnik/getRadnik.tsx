@@ -4,8 +4,21 @@ import { useSQLiteContext } from 'expo-sqlite';
 import { useFocusEffect } from 'expo-router';
 import { Korisnik } from '@/models/Korisnik';
 import React from 'react'
+import { useAuth } from '../../contexts/AuthContext';
+import { router } from 'expo-router';
+import { SessionExpiredOverlay } from '../../components/SessionExpiredOverlay';
 
 const getRadnik = () => {
+
+  const { userData, isSessionExpired, setUserData, resetInactivityTimeout } = useAuth();
+  const logout = async () => {
+    try{
+      await setUserData(null);
+      router.replace('/log-in');
+    } catch (error) {
+      console.error("Error: " + error)
+    }
+  };
 
   const database = useSQLiteContext();
   const [data, setData] = useState<Korisnik[]>([]);
@@ -121,7 +134,14 @@ const getRadnik = () => {
 }
 
   return (
-    <SafeAreaView className='h-full flex bg-primary'>
+    <SafeAreaView className='h-full flex-1 bg-primary'>
+      <View
+        className="flex-1"
+        onStartShouldSetResponder={() => {
+          resetInactivityTimeout();
+          return false;
+        }}
+      >
         <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
             <View className="mt-4 px-6 mx-auto w-full max-w-2xl">
                 {/* Table Header */}
@@ -200,6 +220,11 @@ const getRadnik = () => {
                 )}
             </View>
         </ScrollView>
+        <SessionExpiredOverlay
+          visible={isSessionExpired}
+          onLogout={logout}
+        />
+        </View>
     </SafeAreaView>
   )
 }

@@ -2,8 +2,23 @@ import React, { useState } from 'react';
 import { SafeAreaView, ScrollView, View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { useSQLiteContext } from 'expo-sqlite';
+import { useAuth } from '../../contexts/AuthContext';
+import { router } from 'expo-router';
+import { SessionExpiredOverlay } from '../../components/SessionExpiredOverlay';
 
 const AddPice = () => {
+
+  const { userData, isSessionExpired, setUserData, resetInactivityTimeout } = useAuth();
+  const logout = async () => {
+    try{
+      await setUserData(null);
+      router.replace('/log-in');
+    } catch (error) {
+      console.error("Error: " + error)
+    }
+  };
+
+
   const database = useSQLiteContext();
   const [naziv, setNaziv] = useState("");
   const [cena, setCena] = useState("");
@@ -63,7 +78,14 @@ const AddPice = () => {
   };
 
   return (
-    <SafeAreaView className='h-full flex bg-primary'>
+    <SafeAreaView className='h-full flex-1 bg-primary'>
+      <View
+          className="flex-1"
+          onStartShouldSetResponder={() => {
+          resetInactivityTimeout();
+          return false;
+      }}
+      >
       <ScrollView keyboardShouldPersistTaps='handled' contentContainerStyle={{ flexGrow: 1 }}>
         <View className="mt-4 px-4 justify-center items-center">
           <Text className='text-center text-lg font-medium text-gray-700'>Naziv</Text>
@@ -139,6 +161,11 @@ const AddPice = () => {
           </View>
         </View>
       </ScrollView>
+      <SessionExpiredOverlay
+          visible={isSessionExpired}
+          onLogout={logout}
+      />
+      </View>
     </SafeAreaView>
   );
 };

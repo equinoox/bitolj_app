@@ -9,6 +9,7 @@ import { useState, useCallback } from 'react'
 import { useSQLiteContext } from 'expo-sqlite';
 import { useFocusEffect } from 'expo-router';
 import  PdfGenerator  from '../../components/PdfGenerator';
+import { SessionExpiredOverlay } from '../../components/SessionExpiredOverlay';
 
 
 const VidiPopis = () => {
@@ -34,7 +35,7 @@ const VidiPopis = () => {
     pice: Pice | undefined;
   }
 
-  const { userData, setUserData } = useAuth();
+  const { userData, isSessionExpired, setUserData, resetInactivityTimeout } = useAuth();
   const logoutConfirm = () => {
     Alert.alert(
       "Log Out",
@@ -176,7 +177,14 @@ const VidiPopis = () => {
   
   
   return (
-    <SafeAreaView>
+    <SafeAreaView className="flex-1">
+        <View
+        className="flex-1"
+        onStartShouldSetResponder={() => {
+          resetInactivityTimeout();
+          return false;
+        }}
+      >
       <ScrollView contentContainerStyle={{ flexGrow: 1}}>
         {/* Header */}
         <View className="flex bg-secondary rounded-3xl m-4 p-4">
@@ -519,6 +527,11 @@ const VidiPopis = () => {
         )}
         </View>
       </ScrollView>
+      <SessionExpiredOverlay
+        visible={isSessionExpired}
+        onLogout={logout}
+      />
+      </View>
     </SafeAreaView>
   )
 }

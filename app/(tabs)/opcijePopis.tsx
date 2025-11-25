@@ -10,6 +10,7 @@ import * as FileSystem from 'expo-file-system';
 import { useState, useCallback, useEffect } from 'react'
 import { useSQLiteContext } from 'expo-sqlite';
 import { useFocusEffect } from 'expo-router';
+import { SessionExpiredOverlay } from '../../components/SessionExpiredOverlay';
 
 const opcijePopis = () => {
 
@@ -77,7 +78,7 @@ const opcijePopis = () => {
    // ================================================================================================================
       
 
-    const { userData, setUserData } = useAuth();
+    const { userData, isSessionExpired, setUserData, resetInactivityTimeout } = useAuth();
     const logoutConfirm = () => {
       Alert.alert(
         "Log Out",
@@ -520,6 +521,13 @@ const opcijePopis = () => {
 
   return (
     <SafeAreaView className= "flex-1">
+        <View
+        className="flex-1"
+        onStartShouldSetResponder={() => {
+          resetInactivityTimeout();
+          return false;
+        }}
+      >
       <ScrollView contentContainerStyle={{flexGrow: 1}}>
       <View className="flex bg-secondary rounded-3xl m-4 p-4">
           {/* Logout Button */}
@@ -537,7 +545,7 @@ const opcijePopis = () => {
             className="absolute top-4 right-4 bg-secondary rounded-md items-center"
             onPress={logoutConfirm}
             >
-              <AntDesign name="logout" size={46} color="#AA0000" />
+              <AntDesign name="logout" size={42} color="#AA0000" />
             </TouchableOpacity>
           )}
 
@@ -901,6 +909,11 @@ const opcijePopis = () => {
 
 
       </ScrollView>
+      <SessionExpiredOverlay
+        visible={isSessionExpired}
+        onLogout={logout}
+      />
+      </View>
     </SafeAreaView>
   )
 }

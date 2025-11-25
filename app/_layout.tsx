@@ -1,12 +1,10 @@
 import { addAdmin, createTables, addPositionColumn, rollbackTables } from '../database/controller/dbController';
 import { AuthProvider } from '../contexts/AuthContext';
 import { SQLiteDatabase, SQLiteProvider } from 'expo-sqlite';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as FileSystem from 'expo-file-system';
 import { Stack } from 'expo-router'
 import { Suspense } from 'react';
 import Fallback from '@/components/Fallback';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import "../global.css";
 
 const RootLayout = () => {

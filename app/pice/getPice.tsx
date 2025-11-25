@@ -4,11 +4,23 @@ import { Picker } from '@react-native-picker/picker';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useFocusEffect } from 'expo-router';
 import { Pice } from '@/models/Pice';
+import { useAuth } from '../../contexts/AuthContext';
+import { router } from 'expo-router';
+import { SessionExpiredOverlay } from '../../components/SessionExpiredOverlay';
 
 
 // SHOW ALL PICE, CHOSEN PICE UPDATE OR DELETE
 const getPice = () => {
 
+    const { userData, isSessionExpired, setUserData, resetInactivityTimeout } = useAuth();
+    const logout = async () => {
+      try{
+        await setUserData(null);
+        router.replace('/log-in');
+      } catch (error) {
+        console.error("Error: " + error)
+      }
+    };
 
     const database = useSQLiteContext();
     const [data, setData] = useState<Pice[]>([]);
@@ -128,7 +140,14 @@ const getPice = () => {
     }
 
     return (
-        <SafeAreaView className='h-full flex bg-primary'>
+        <SafeAreaView className='h-full flex-1 bg-primary'>
+            <View
+                className="flex-1"
+                onStartShouldSetResponder={() => {
+                resetInactivityTimeout();
+                return false;
+            }}
+            >
             <ScrollView keyboardShouldPersistTaps='handled' contentContainerStyle={{ flexGrow: 1 }}>
                 <View className="mt-4 px-6 mx-auto w-full max-w-2xl">
                     {/* Table Header */}
@@ -245,6 +264,11 @@ const getPice = () => {
                     )}
                 </View>
             </ScrollView>
+            <SessionExpiredOverlay
+                visible={isSessionExpired}
+                onLogout={logout}
+            />
+            </View>
         </SafeAreaView>
     )
 }

@@ -12,6 +12,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import DialogModal from '@/components/DialogModal';
 import DialogModalN from '@/components/DialogModalN';
 import PTDialogModal from '@/components/PTDialogModal';
+import { SessionExpiredOverlay } from '../../components/SessionExpiredOverlay';
+import { TextInputWithReset } from '../../components/TextInputWithReset';
 import React from 'react'
 
 
@@ -20,7 +22,7 @@ const Popis = () => {
   // LOGIN & LOGOUT
   // ===============================================  =================================================================
   // ================================================================================================================
-  const { userData, setUserData } = useAuth();
+  const { userData, isSessionExpired, setUserData, resetInactivityTimeout } = useAuth();
   const logoutConfirm = () => {
     Alert.alert(
       "Log Out",
@@ -225,7 +227,7 @@ const Popis = () => {
   ): Promise<void> => {  
     try {
       const localTimestamp = new Date().toLocaleString("en-US", { timeZone: "Europe/Belgrade" });
-      await database.runAsync(`
+      const result = await database.runAsync(`
       INSERT INTO change_history (
         id_pice,
         id_korisnik,
@@ -235,6 +237,7 @@ const Popis = () => {
         timestamp
       ) VALUES (?, ?, ?, ?, ?, ?);
     `, [id_pice, id_korisnik, column, old_value, new_value, localTimestamp]); 
+      console.log("✅ Logged change successfully:" + result);
     } catch (error) {
       console.error('Transaction error:', error);
     }
@@ -824,6 +827,13 @@ const Popis = () => {
 
   return (
     <SafeAreaView className="flex-1">
+      <View
+        className="flex-1"
+        onStartShouldSetResponder={() => {
+          resetInactivityTimeout();
+          return false;
+        }}
+      >
       <ScrollView keyboardShouldPersistTaps='handled' contentContainerStyle={{ flexGrow: 1 }}>
         {/* Header */}
         <View className="flex bg-secondary rounded-3xl m-4 mb-2 p-4">
@@ -848,7 +858,7 @@ const Popis = () => {
             className="absolute top-4 right-4 bg-secondary rounded-md items-center"
             onPress={logoutConfirm}
             >
-              <AntDesign name="logout" size={46} color="#AA0000" />
+              <AntDesign name="logout" size={42} color="#AA0000" />
             </TouchableOpacity>
           )}
 
@@ -1359,10 +1369,13 @@ const Popis = () => {
           </View>
         </View>
       </View>
+
     </ScrollView>
-
-      {/* Dialog Modal */}
-
+    <SessionExpiredOverlay
+        visible={isSessionExpired}
+        onLogout={logout}
+    />
+      </View>
   </SafeAreaView>
   );
 };

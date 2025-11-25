@@ -2,8 +2,21 @@ import { Text, View, SafeAreaView, ScrollView, TextInput, TouchableOpacity, Styl
 import { useSQLiteContext } from 'expo-sqlite';
 import { Picker } from '@react-native-picker/picker';
 import { useState } from 'react'
+import { useAuth } from '../../contexts/AuthContext';
+import { router } from 'expo-router';
+import { SessionExpiredOverlay } from '../../components/SessionExpiredOverlay';
 
 const addRadnik = () => {
+
+  const { userData, isSessionExpired, setUserData, resetInactivityTimeout } = useAuth();
+  const logout = async () => {
+    try{
+      await setUserData(null);
+      router.replace('/log-in');
+    } catch (error) {
+      console.error("Error: " + error)
+    }
+  };
 
   const database = useSQLiteContext();
   const [ime, setIme] = useState("");
@@ -58,7 +71,14 @@ const addRadnik = () => {
   }
 
   return (
-    <SafeAreaView className='h-full flex bg-primary'>
+    <SafeAreaView className='h-full flex-1 bg-primary'>
+        <View
+        className="flex-1"
+        onStartShouldSetResponder={() => {
+          resetInactivityTimeout();
+          return false;
+        }}
+      >
         <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
           <View className="mt-4 px-4 justify-center items-center">
             <Text className='text-center'>Ime</Text>
@@ -113,6 +133,11 @@ const addRadnik = () => {
             </View>
           </View>
         </ScrollView>
+        <SessionExpiredOverlay
+          visible={isSessionExpired}
+          onLogout={logout}
+        />
+        </View>
     </SafeAreaView>
   )
 }

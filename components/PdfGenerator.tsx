@@ -1,6 +1,10 @@
-import { View, StyleSheet, Button, Modal } from 'react-native';
+import { View, StyleSheet, Button, Modal, Platform, Alert, Linking  } from 'react-native';
 import * as Print from 'expo-print';
-import { shareAsync } from 'expo-sharing';
+import * as Sharing from 'expo-sharing'
+import * as FileSystem from 'expo-file-system';
+import { useAuth } from '../contexts/AuthContext';
+import { AssetRef, requestPermissionsAsync, getAlbumsAsync, createAlbumAsync, createAssetAsync, addAssetsToAlbumAsync } from 'expo-media-library';
+
 
 interface Pice {
   id_pice: number;
@@ -53,14 +57,16 @@ interface PdfGeneratorProps {
     onClose: () => void; 
   }
 
+
+
   const evaluateExpression = (expression: string | null): string => {
     if (!expression) return '0';
     try {
-      // Use Function constructor for safe evaluation
+
       const result = new Function(`return (${expression})`)();
       return result.toString();
     } catch (error) {
-      console.error('Error evaluating expression:', error);
+      console.error('❌ Error evaluating expression:', error);
       return '0';
     }
   };
@@ -325,22 +331,42 @@ const PdfGenerator: React.FC<PdfGeneratorProps> = ({
     visible,
     onClose
   }) => {
+    const { userData, setUserData } = useAuth();
+
     const printToFile = async () => {
       try {
-        const { uri } = await Print.printToFileAsync({
+        const { uri: originalUri } = await Print.printToFileAsync({
           html: generatePdfHtml(title, dataStavka, dataPopis, dataPice),
         });
-        console.log('PDF saved to:', uri);
-        await shareAsync(uri, { 
-          UTI: '.pdf', 
-          mimeType: 'application/pdf',
-          dialogTitle: `Popis: ${dataPopis.datum}.pdf`
+    
+        const smenaFormatted = dataPopis.smena === "prva" ? "Prva" 
+        : dataPopis.smena === "druga" ? "Druga" 
+        : dataPopis.smena;
+
+        const newFilename = `Popis_${dataPopis.datum}_${smenaFormatted}.pdf`;
+        const directory = `${FileSystem.documentDirectory}pdfs/`;
+        const newUri = `${directory}${newFilename}`;
+    
+        await FileSystem.makeDirectoryAsync(directory, { intermediates: true });
+    
+        await FileSystem.moveAsync({
+          from: originalUri,
+          to: newUri,
         });
+    
+
+        await Sharing.shareAsync(newUri, { 
+          mimeType: 'application/pdf',
+          dialogTitle: `Popis: ${dataPopis.datum}`,
+          UTI: 'com.adobe.pdf',
+        });
+    
       } catch (error) {
-        console.error('PDF generation failed:', error);
+        console.error('❌ PDF generation or sharing failed:', error);
       }
     };
-  
+
+    
     return (
         <Modal
         visible={visible}
@@ -349,12 +375,21 @@ const PdfGenerator: React.FC<PdfGeneratorProps> = ({
         onRequestClose={onClose}
       >
         <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Button 
-              title="Save as PDF" 
-              onPress={printToFile}
-              color="#FFA001"
-            />
+          <View style={styles.modalContent}>       
+            {userData?.role === "admin" && (
+              <Button 
+                title="Pošalji Popis" 
+                onPress={printToFile}
+                color="#FFA001"
+              />
+            )}
+            <View style={{ marginTop: 10 }}>
+              <Button
+                title="Snimi Popis" 
+                // onPress={savePopisToGallery}
+                color="orange"
+              />
+            </View>
             <View style={{ marginTop: 10 }}>
               <Button
                 title="Close" 
