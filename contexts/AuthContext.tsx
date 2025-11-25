@@ -27,7 +27,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const inactivityTimeout = useRef<NodeJS.Timeout | null>(null);
   const appState = useRef(AppState.currentState);
   
-  const TIMEOUT_DURATION = 10 * 1000; // 3 minuta
+  const TIMEOUT_DURATION = 3 * 60 * 1000; // 3 minuta
 
   useEffect(() => {
     loadUserData();
