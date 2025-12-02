@@ -75,7 +75,7 @@ const Radnici = () => {
 
           {/* Content */}
           <View className='flex justify-center items-center m-4'>
-            <Text className='font-semibold text-3xl'>Radnik Menu</Text>
+            <Text className='font-semibold text-3xl'>Opcije Menu</Text>
             <View className="mt-4 w-full border-t-2 border-black" />
             {userData?.role === 'admin' ? (
               <>
@@ -83,31 +83,31 @@ const Radnici = () => {
                   className='mt-4 bg-orange items-center w-2/4 rounded-md py-4 px-4'
                   onPress={() => router.push("/radnik/listRadnik")}
                 >
-                  <Text>Lista Radnika</Text>
+                  <Text className='font-semibold'>Lista Radnika</Text>
                 </TouchableOpacityWithReset>
                 <TouchableOpacityWithReset
                   className='mt-4 bg-orange items-center w-2/4 rounded-md py-4 px-4'
                   onPress={() => router.push("/radnik/getRadnik")}
                 >
-                  <Text>Promeni/Obriši Radnika</Text>
+                  <Text className='font-semibold'>Promeni/Obriši Radnika</Text>
                 </TouchableOpacityWithReset>
                 <TouchableOpacityWithReset
                   className='mt-4 bg-orange items-center w-2/4 rounded-md py-4 px-4'
                   onPress={() => router.push("/radnik/roleRadnik")}
                 >
-                  <Text>Promeni poziciju Radnika</Text>
+                  <Text className='font-semibold'>Promeni poziciju Radnika</Text>
                 </TouchableOpacityWithReset>
                 <TouchableOpacityWithReset
                   className='mt-4 bg-orange items-center w-2/4 rounded-md py-4 px-4'
                   onPress={() => router.push("/radnik/passRadnik")}
                 >
-                  <Text>Promeni šifru Radnika</Text>
+                  <Text className='font-semibold'>Promeni šifru Radnika</Text>
                 </TouchableOpacityWithReset>
                 <TouchableOpacityWithReset
                   className='mt-4 bg-orange items-center w-2/4 rounded-md py-4 px-4'
                   onPress={() => router.push("/radnik/addRadnik")}
                 >
-                  <Text>Dodaj Radnika</Text>
+                  <Text className='font-semibold'>Dodaj Radnika</Text>
                 </TouchableOpacityWithReset>
               </>
             ) : userData?.role === 'manager' ? (
@@ -116,17 +116,64 @@ const Radnici = () => {
                   className='mt-4 bg-orange items-center w-2/4 rounded-md py-4 px-4'
                   onPress={() => router.push("/radnik/listRadnik")}
                 >
-                  <Text>Lista Radnika</Text>
+                  <Text className='font-semibold'>Lista Radnika</Text>
                 </TouchableOpacityWithReset>
               </>
             ) : (
               <View className="mt-8 p-4 bg-red-100 rounded-lg justify-center items-center">
                 <MaterialIcons name="cancel" size={74} color="#393B44" />
                 <Text className="text-red-600 text-center text-lg">
-                  Ne možete pristupiti jer nemate administratorske privilegije.
+                  Ne možete pristupiti ostalim funkcionalnostima jer nemate administratorske privilegije.
                 </Text>
               </View>
             )}
+
+            <View className='mt-1 w-full items-center'>
+              {userData?.role === 'admin' ? (
+                <>
+                  <TouchableOpacityWithReset 
+                    className='mt-4 bg-orange items-center w-2/4 rounded-md py-4 px-4'
+                    onPress={() => router.push("/pice/listPice")}
+                  >
+                    <Text className='font-semibold'>Lista Pića</Text>
+                  </TouchableOpacityWithReset>
+                  <TouchableOpacityWithReset 
+                    className='mt-4 bg-orange items-center w-2/4 rounded-md py-4 px-4'
+                    onPress={() => router.push("/pice/getPice")}
+                  >
+                    <Text className='font-semibold'>Promeni/Obriši Piće</Text>
+                  </TouchableOpacityWithReset>
+                  <TouchableOpacityWithReset 
+                    className='mt-4 bg-orange items-center w-2/4 rounded-md py-4 px-4'
+                    onPress={() => router.push("/pice/addPice")}
+                  >
+                    <Text className='font-semibold'>Dodaj Piće</Text>
+                  </TouchableOpacityWithReset>
+                </>
+              ) : userData?.role === 'manager' ? (
+                <>
+                  <TouchableOpacityWithReset 
+                    className='mt-4 bg-orange items-center w-2/4 rounded-md py-4 px-4'
+                    onPress={() => router.push("/pice/listPice")}
+                  >
+                    <Text className='font-semibold'>Lista Pića</Text>
+                  </TouchableOpacityWithReset>
+                  <TouchableOpacityWithReset 
+                    className='mt-4 bg-orange items-center w-2/4 rounded-md py-4 px-4'
+                    onPress={() => router.push("/pice/addPice")}
+                  >
+                    <Text className='font-semibold'>Dodaj Piće</Text>
+                  </TouchableOpacityWithReset>
+                </>
+              ) : (
+                <TouchableOpacityWithReset 
+                  className='mt-4 bg-orange items-center w-2/4 rounded-md py-4 px-4'
+                  onPress={() => router.push("/pice/listPice")}
+                >
+                  <Text className='font-semibold'>Lista Pića</Text>
+                </TouchableOpacityWithReset>
+              )}
+            </View>
           </View>
         </ScrollView>
 

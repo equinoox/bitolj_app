@@ -72,7 +72,7 @@ const App = () => {
             >
               <Text className="text-black text-2xl font-bold">Nastavi</Text>
             </TouchableOpacity>
-            <Text className="text-white text-center text-md mt-2">Version: 1.2.6</Text>
+            <Text className="text-white text-center text-md mt-2">Version: 1.3.1</Text>
           </View>
 
           {/* Footer */}

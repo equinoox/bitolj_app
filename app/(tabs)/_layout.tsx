@@ -4,6 +4,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 
 import AntDesign from '@expo/vector-icons/AntDesign';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { Feather } from '@expo/vector-icons';
 
 const TabsLayout = () => {
   return (
@@ -19,6 +20,21 @@ const TabsLayout = () => {
             borderTopColor: '',
             height: 84,
             paddingTop: 6,
+            paddingBottom: 6,
+          },
+          tabBarItemStyle: {
+            flex: 1,
+            alignItems: 'center',
+            justifyContent: 'center',
+            paddingVertical: 4,
+          },
+          tabBarLabelStyle: {
+            marginTop: 4,
+            fontSize: 12,
+            lineHeight: 16,
+          },
+          tabBarIconStyle: {
+            marginBottom: 0,
           }
         }}
       >
@@ -37,24 +53,24 @@ const TabsLayout = () => {
           )
         }}/>
         <Tabs.Screen name='opcijePopis' options={{
-          title: "Promeni Popis",
+          title: "Izmeni",
           headerShown: false,
           tabBarIcon: ({color}) => (
             <FontAwesome5 name="edit" size={24} color={color} />
           )
         }}/>
-        <Tabs.Screen name='radnici' options={{
-          title: "Radnici",
+        <Tabs.Screen name='statistika' options={{
+          title: "Statistika",
           headerShown: false,
           tabBarIcon: ({color}) => (
-            <Ionicons name="person" size={24} color={color} />
+            <FontAwesome name="bar-chart" size={24} color={color} />
           )
         }}/>
-        <Tabs.Screen name='proizvodi' options={{
-          title: "Piće",
+        <Tabs.Screen name='radnici' options={{
+          title: "Opcije",
           headerShown: false,
           tabBarIcon: ({color}) => (
-            <FontAwesome name="glass" size={24} color={color} />
+            <Feather name="settings" size={24} color={color} />
           )
         }}/>
       </Tabs>
